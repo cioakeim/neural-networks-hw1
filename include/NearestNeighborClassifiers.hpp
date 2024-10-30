@@ -1,9 +1,10 @@
 #ifndef K_NEAREST_NEIGHBOR_CLASSIFIERS_HPP
 #define K_NEAREST_NEIGHBOR_CLASSIFIERS_HPP
 
-#include "NdPoint.hpp"
-#include "NdPointSet.hpp"
-#include "KNearestNeighbors.hpp"
+#include "basicStructs.hpp"
+#include <eigen3/Eigen/Dense>
+
+namespace E=Eigen;
 
 /**
  * @brief Classifies an input point using the nearest neighbor criterion.
@@ -13,22 +14,8 @@
  *
  * @return Class ID of the final decision.
 */
-template <typename T>
-int classify_1_nearest_neighbor(NdPoint<T> &input_point, NdPointSet<T> &set){
-  // Get nearest point.
-  NdPointSet<T> *nearest_set=k_nearest_neighbors(input_point,set,1);
-  std::cout << "This is done" << std::endl;
-
-  int final_id=nearest_set->elements[0].class_id;
-
-  // Cleanup the call
-  delete nearest_set;
-  nearest_set=nullptr;
-
-  std::cout << "This is done" << std::endl;
-  // Return class id
-  return final_id;
-}
+int classify_1_nearest_neighbor(E::VectorXf &input_point,
+                                std::vector<SamplePoint> &set);
 
 
 /**
@@ -39,32 +26,7 @@ int classify_1_nearest_neighbor(NdPoint<T> &input_point, NdPointSet<T> &set){
  *
  * @return Class ID of the final decision.
 */
-template <typename T>
-int classify_3_nearest_neighbor(NdPoint<T> &input_point, NdPointSet<T> &set){
-  // Get 3 nearest points.
-  NdPointSet<T> *nearest_set=k_nearest_neighbors(input_point,set,3);
-
-  // Since only 3 points are used, the logic is implemented using 
-  // basic if statements (majority vote otherwise is more complex)
-  int end_id=-1; 
-  // Majority cases
-  if(nearest_set->elements[0].class_id==nearest_set->elements[1].class_id
-  || nearest_set->elements[0].class_id==nearest_set->elements[2].class_id){
-    end_id=nearest_set->elements[0].class_id;
-  }
-  else if(nearest_set->elements[1].class_id==nearest_set->elements[2].class_id){
-    end_id=nearest_set->elements[1].class_id;
-  }
-  else{
-    // If there is no majority, the winner is the closest element
-    end_id=nearest_set->elements[0].class_id;
-  }
-  // Cleanup the call
-  delete nearest_set;
-  nearest_set=nullptr;
-
-
-  return end_id;
-}
+int classify_3_nearest_neighbor(E::VectorXf &input_point,
+                                std::vector<SamplePoint> &set);
 
 #endif
