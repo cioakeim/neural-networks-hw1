@@ -66,10 +66,10 @@ NdPointSet<double>* getCentroidSet(NdPointSet<T> &set, int class_count){
  * @return class id of prediction.
 */
 template <typename T>
-int classify_nearest_centroid(NdPoint<T> input_point,
-                              NdPointSet<double> centroid_set){
+int classifyNearestCentroid(NdPoint<T> &input_point,
+                              NdPointSet<double> &centroid_set){
   // Convert input point to double 
-  NdPoint<double> input_point_double= NdPoint(input_point);
+  NdPoint<double> input_point_double= NdPoint<double>(input_point);
   
   // Call 1 nearest neighbor classifier with double type
   return classify_1_nearest_neighbor(input_point_double,

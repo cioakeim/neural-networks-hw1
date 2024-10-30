@@ -49,7 +49,8 @@ NdPointSet<T>::NdPointSet(int count,int dimension)
 template <typename T>
 NdPointSet<T>::~NdPointSet(){
   if(this->elements!=nullptr){
-    delete this->elements;
+    delete[] this->elements;
+    this->elements=nullptr;
   }
   this->count=0;
 }

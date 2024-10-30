@@ -15,9 +15,9 @@
  * @return Pointer to set of k nearest points to input_point.
 */
 template <typename T>
-NdPointSet<T>* k_nearest_neighbors(NdPoint<T> input_point, NdPointSet<T> set, int k){
+NdPointSet<T>* k_nearest_neighbors(NdPoint<T> &input_point, NdPointSet<T> &set, int k){
   // Return set
-  NdPointSet<T> *final_set= new NdPointSet<T>();
+  NdPointSet<T> *final_set= new NdPointSet<T>(k,input_point.dimension);
 
   // Array containing current nearest points and their distances.
   NdPoint<T> **k_nearest_points= new NdPoint<T>*[k];
@@ -59,6 +59,9 @@ NdPointSet<T>* k_nearest_neighbors(NdPoint<T> input_point, NdPointSet<T> set, in
     final_set->elements[i]=*k_nearest_points[i];
   }
 
+  for(int i=0;i<k;i++){
+    final_set->elements[i].print();
+  }
   return final_set;
 }
 

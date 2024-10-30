@@ -29,6 +29,9 @@ public:
   NdPoint(int dimension, T* elements, int class_id);
 
   // Copy constructor
+  NdPoint(const NdPoint<T>& other);
+
+  // Templated copy constructor
   template <typename P>
   NdPoint(const NdPoint<P>& other);
 
@@ -67,6 +70,11 @@ public:
    * @brief Set point to zero.
   */
   void set_to_zero();
+
+  /**
+   * @brief Print point to screen
+  */
+  void print();
 };
 
 
@@ -97,6 +105,19 @@ NdPoint<T>::NdPoint(int dimension, T* elements, int class_id)
 }
 
 // Copy constructor
+template <typename T>
+NdPoint<T>::NdPoint(const NdPoint<T>& other)
+  : dimension(other.dimension),
+    elements(new T[other.dimension]),
+    class_id(other.class_id) 
+{
+  for(int i=0;i<this->dimension;i++){
+    // Cast type to callee
+    this->elements[i]=other.elements[i];
+  }
+}
+
+// Templated copy constructor
 template <typename T>
 template <typename P>
 NdPoint<T>::NdPoint(const NdPoint<P>& other)
@@ -131,6 +152,7 @@ template <typename T>
 NdPoint<T>::~NdPoint(){
   if(this->elements!=nullptr){
     delete[] this->elements;
+    this->elements=nullptr;
   }
   this->dimension=0;
   this->class_id=-1;
@@ -148,6 +170,7 @@ double NdPoint<T>::get_distance(NdPoint<T>& a){
     square_sum+=pow(static_cast<double>(this->elements[i])
                     -static_cast<double>(a.elements[i]),2);
   }
+  std::cout << sqrt(square_sum) << std::endl;
   return sqrt(square_sum);
 }
 
@@ -175,5 +198,11 @@ void NdPoint<T>::set_to_zero(){
   return;
 }
 
+template <typename T>
+void NdPoint<T>::print(){
+  for(int i=0;i<this->dimension;i++)
+    std::cout<< this->elements[i] << " ";
+  std::cout<< std::endl;
+}
 
 #endif
