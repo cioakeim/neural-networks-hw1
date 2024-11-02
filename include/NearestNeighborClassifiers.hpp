@@ -3,6 +3,7 @@
 
 #include "basicStructs.hpp"
 #include <eigen3/Eigen/Dense>
+#include <vector>
 
 namespace E=Eigen;
 
@@ -14,7 +15,7 @@ namespace E=Eigen;
  *
  * @return Class ID of the final decision.
 */
-int classify_1_nearest_neighbor(E::VectorXf &input_point,
+uint8_t classify_1_nearest_neighbor(E::VectorXf &input_point,
                                 std::vector<SamplePoint> &set);
 
 
@@ -26,7 +27,7 @@ int classify_1_nearest_neighbor(E::VectorXf &input_point,
  *
  * @return Class ID of the final decision.
 */
-int classify_3_nearest_neighbor(E::VectorXf &input_point,
+uint8_t classify_3_nearest_neighbor(E::VectorXf &input_point,
                                 std::vector<SamplePoint> &set);
 
 #endif

@@ -1,6 +1,8 @@
 #include "NearestCentroidClassifier.hpp"
 #include "NearestNeighborClassifiers.hpp"
+#include <vector>
 
+namespace E=Eigen;
 
 std::vector<SamplePoint> getCentroidSet(std::vector<SamplePoint> &set,
                                         int class_count){
@@ -9,8 +11,9 @@ std::vector<SamplePoint> getCentroidSet(std::vector<SamplePoint> &set,
   std::vector<SamplePoint> class_set(class_count);
 
   // Set all elements to zero 
+  int set_dimension=set[0].vector.size();
   for(int i=0;i<class_set.size();i++){
-    class_set[i].vector.setZero();
+    class_set[i].vector=E::VectorXf::Zero(set_dimension);
     class_set[i].label=i;
   }
 
@@ -21,7 +24,8 @@ std::vector<SamplePoint> getCentroidSet(std::vector<SamplePoint> &set,
   
   // Get all sample sums
   int current_id;
-  for(int i=0;i<set.size();i++){
+  int set_size=set.size();
+  for(int i=0;i<set_size;i++){
     current_id=set[i].label;
     sample_per_class_counters[current_id]++;
     class_set[current_id].vector+=set[i].vector;
@@ -38,7 +42,7 @@ std::vector<SamplePoint> getCentroidSet(std::vector<SamplePoint> &set,
 }
 
 
-int classifyNearestCentroid(E::VectorXf &input_point,
+uint8_t classifyNearestCentroid(E::VectorXf &input_point,
                             std::vector<SamplePoint> &centroid_set){
   // Call 1 nearest neighbor classifier with double type
   return classify_1_nearest_neighbor(input_point,

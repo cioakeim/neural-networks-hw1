@@ -3,6 +3,7 @@
 
 #include <eigen3/Eigen/Dense>
 #include "basicStructs.hpp"
+#include <vector>
 
 namespace E=Eigen;
 
@@ -29,7 +30,7 @@ std::vector<SamplePoint> getCentroidSet(std::vector<SamplePoint> &set,
  *
  * @return class id of prediction.
 */
-int classifyNearestCentroid(E::VectorXf &input_point,
+uint8_t classifyNearestCentroid(E::VectorXf &input_point,
                             std::vector<SamplePoint> &centroid_set);
 
 

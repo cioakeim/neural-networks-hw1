@@ -8,7 +8,7 @@ namespace E=Eigen;
 // A sample is a N-D point with a class label
 struct SamplePoint{
   E::VectorXf vector; //< The sample in Nd 
-  int label; //< The sample's label
+  uint8_t label; //< The sample's label
 };
 
 #endif // !BASIC_STRUCTS_HPP

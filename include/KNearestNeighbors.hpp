@@ -2,6 +2,7 @@
 #define K_NEAREST_NEIGHBORS_HPP
 
 #include <eigen3/Eigen/Dense>
+#include <vector>
 #include "basicStructs.hpp"
 
 namespace E=Eigen;

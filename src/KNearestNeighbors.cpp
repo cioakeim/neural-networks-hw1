@@ -1,4 +1,6 @@
 #include "KNearestNeighbors.hpp"
+#include <vector>
+#include <iostream>
 
 namespace E=Eigen;
 
@@ -16,15 +18,15 @@ std::vector<SamplePoint*> k_nearest_neighbors(E::VectorXf &input_point,
   }
   
   // Get k nearest point references
-  SamplePoint* current_sample;
   double current_distance;
-  for(int i=0;i<set.size();i++){
+
+  int set_size=set.size();
+  for(int i=0;i<set_size;i++){
     // This point is examined
-    current_sample=&set[i];
+    current_distance=(input_point-set[i].vector).norm(); 
 
     // Climb up slowly the priority queue to find this point's place.
     for(int j=k-1;j>=0;j--){
-      current_distance=(input_point-current_sample->vector).norm(); 
       // If the current entry is better, keep that.
       if(current_distance>k_nearest_distances[j])
         break;
@@ -34,7 +36,7 @@ std::vector<SamplePoint*> k_nearest_neighbors(E::VectorXf &input_point,
         k_nearest_points[j+1]=k_nearest_points[j];
         k_nearest_distances[j+1]=k_nearest_distances[j];
       }
-      k_nearest_points[j]=current_sample;
+      k_nearest_points[j]=&set[i];
       k_nearest_distances[j]=current_distance;
     }
   }
