@@ -1,4 +1,4 @@
-#include "KNearestNeighbors.hpp"
+#include "NearestNeighbors/KNearestNeighbors.hpp"
 #include <vector>
 #include <iostream>
 

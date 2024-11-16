@@ -1,4 +1,4 @@
-#include "activationFunctions.hpp"
+#include "MLP/ActivationFunctions.hpp"
 #include <cmath>
 
 E::VectorXf reLU(const E::VectorXf& in){

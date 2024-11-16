@@ -1,5 +1,5 @@
-#include "cifarHandlers.hpp"
-#include "basicStructs.hpp"
+#include "CommonLib/cifarHandlers.hpp"
+#include "CommonLib/basicStructs.hpp"
 #include <iostream>
 #include <fstream>
 #include <vector>

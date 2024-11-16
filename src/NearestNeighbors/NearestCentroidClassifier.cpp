@@ -1,5 +1,5 @@
-#include "NearestCentroidClassifier.hpp"
-#include "NearestNeighborClassifiers.hpp"
+#include "NearestNeighbors/NearestCentroidClassifier.hpp"
+#include "NearestNeighbors/NearestNeighborClassifiers.hpp"
 #include <vector>
 
 namespace E=Eigen;

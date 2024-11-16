@@ -3,10 +3,10 @@
 #include <string>
 #include <eigen3/Eigen/Dense>
 #include <opencv4/opencv2/opencv.hpp>
-#include "NearestCentroidClassifier.hpp"
-#include "NearestNeighborClassifiers.hpp"
-#include "cifarHandlers.hpp"
-#include "LogHandler.hpp"
+#include "NearestNeighbors/NearestCentroidClassifier.hpp"
+#include "NearestNeighbors/NearestNeighborClassifiers.hpp"
+#include "CommonLib/cifarHandlers.hpp"
+#include "CommonLib/LogHandler.hpp"
 
 namespace E=Eigen;
 

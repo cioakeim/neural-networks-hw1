@@ -3,7 +3,7 @@
 
 #include <eigen3/Eigen/Dense>
 #include <vector>
-#include "basicStructs.hpp"
+#include "CommonLib/basicStructs.hpp"
 
 namespace E=Eigen;
 

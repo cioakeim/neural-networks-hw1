@@ -1,7 +1,7 @@
 #ifndef K_NEAREST_NEIGHBOR_CLASSIFIERS_HPP
 #define K_NEAREST_NEIGHBOR_CLASSIFIERS_HPP
 
-#include "basicStructs.hpp"
+#include "CommonLib/basicStructs.hpp"
 #include <eigen3/Eigen/Dense>
 #include <vector>
 

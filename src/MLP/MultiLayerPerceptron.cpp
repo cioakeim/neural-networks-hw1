@@ -1,5 +1,5 @@
-#include "MultiLayerPerceptron.hpp"
-#include "NeuronLayer.hpp"
+#include "MLP/MultiLayerPerceptron.hpp"
+#include "MLP/NeuronLayer.hpp"
 #include <cmath>
 #include <iostream>
 

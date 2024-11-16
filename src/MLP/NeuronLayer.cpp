@@ -1,4 +1,4 @@
-#include "NeuronLayer.hpp"
+#include "MLP/NeuronLayer.hpp"
 #include <iostream>
 #include <eigen3/Eigen/Dense>
 #include <random>

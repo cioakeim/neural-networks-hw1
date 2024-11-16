@@ -3,8 +3,8 @@
 
 #include <vector>
 #include <eigen3/Eigen/Dense>
-#include "NeuronLayer.hpp"
-#include "basicStructs.hpp"
+#include "MLP/NeuronLayer.hpp"
+#include "CommonLib/basicStructs.hpp"
 
 namespace E=Eigen;
 

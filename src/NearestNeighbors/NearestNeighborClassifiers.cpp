@@ -1,5 +1,5 @@
-#include "NearestNeighborClassifiers.hpp"
-#include "KNearestNeighbors.hpp"
+#include "NearestNeighbors/NearestNeighborClassifiers.hpp"
+#include "NearestNeighbors/KNearestNeighbors.hpp"
 #include <vector>
 
 

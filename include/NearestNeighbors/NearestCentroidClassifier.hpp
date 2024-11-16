@@ -2,7 +2,7 @@
 #define NEAREST_CENTROID_CLASSIFIER_HPP
 
 #include <eigen3/Eigen/Dense>
-#include "basicStructs.hpp"
+#include "CommonLib/basicStructs.hpp"
 #include <vector>
 
 namespace E=Eigen;

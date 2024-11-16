@@ -5,9 +5,9 @@
 #include <string>
 #include <eigen3/Eigen/Dense>
 
-#include "cifarHandlers.hpp"
-#include "MultiLayerPerceptron.hpp"
-#include "activationFunctions.hpp"
+#include "CommonLib/cifarHandlers.hpp"
+#include "MLP/MultiLayerPerceptron.hpp"
+#include "MLP/ActivationFunctions.hpp"
 #include <time.h>
 #include <csignal>
 
