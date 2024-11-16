@@ -7,6 +7,9 @@
 
 namespace E=Eigen;
 
+#define RATE 1e-3
+#define WEIGHT_DECAY_RATE 1e-3
+
 
 /**
  * @brief A layer of neurons in a feed-forward NN.
@@ -15,69 +18,88 @@ namespace E=Eigen;
 */
 class NeuronLayer{
 private:
-  // Relevant information of previous and next layers:
-  const E::VectorXf *input;
-  const E::VectorXf *next_gradients;
-  const E::MatrixXf *next_weights;
-  // These are all local information of the layer:
-  uint32_t layer_size; //< The amount of output nodes on this layer.
+  // Structure
   E::MatrixXf weights; //< The weights of the layer that determine this
                        // layer's outputs. 
   E::VectorXf biases;  //< For computation efficiency, biases are a separate field.
   E::VectorXf outputs; //< The output of the layer.
-  E::VectorXf (*activation_function)(const E::VectorXf&); //< The activation function of the layer.
-  E::VectorXf (*activation_derivative)(const E::VectorXf&); //< Derivative of activation_function
-  E::VectorXf local_gradients; //< The local gradients vector of the layer. 
+
+  // Parameters for outputs
+  E::VectorXf (*f)(const E::VectorXf&); //< The activation function of the layer.
+  E::VectorXf (*f_dot)(const E::VectorXf&); //< Derivative of activation_function
+
+  // Training parameters
+  E::VectorXf local_errors; //< The local gradients vector of the layer. 
+  // Accumulators used in stochastic gradient descend
+  E::MatrixXf weightGradients;
+  E::MatrixXf biasGradients;
 
   
 
 public:
-  // Empty constructor 
-  NeuronLayer();
+  // Constructors:
+
+  // Empty constructor
+  NeuronLayer(){};
   // Initialize input layer (hidden layer 1).
   NeuronLayer(uint32_t input_size,uint32_t layer_size);
   // Initialize intermediate hidden layer.
   NeuronLayer(NeuronLayer* previous_layer,uint32_t layer_size);
-  // Initializes the weights to random small values.
-  void assertRandomWeights();
-  // Copys a certain weight matrix and bias vector to the layer. 
-  void insertWeightMatrixAndBias(E::MatrixXf &weights,E::VectorXf &biases);
-  // Sets the next layer 
-  void setNextLayerInfo(NeuronLayer* next_layer);
-  // Sets the activation function of the layer.
-  void setActivationFunction(E::VectorXf (*func)(const E::VectorXf&));
-  // Set the derivative of the activation function 
-  void setActivationDerivative(E::VectorXf (*func)(const E::VectorXf&));
-  // Return the reference to weights,local_gradients,outputs 
-  // for use of adjacent layers (read-only).
-  const E::MatrixXf* getWeightsPointer() const {return &weights;}
-  const E::VectorXf* getOutputsPointer() const {return &outputs;}
-  const E::VectorXf* getLocalGradientsPointer() const {return &local_gradients;}
 
+  // Read-only getters 
+  const E::MatrixXf& getWeightsRef() const {return weights;}
+  const E::VectorXf& getOutputsRef() const {return outputs;}
+  const E::VectorXf& getLocalErrorsRef() const {return local_errors;}
+
+  // Print methods
   void printWeights();
   void printBiases();
   void printOutputs();
   void printGradients();
 
 
-  // Forward pass methods.
+  // Configuration:
 
-  // (For input layer only) calculates output based on input vector.
-  void assertInput(const E::VectorXf &input);
-  // (For the rest of the layers) calculates output vector based on previous 
-  // layer.
-  void forwardPropagate();
+  // Initializes the weights to random small values.
+  void assertRandomWeights();
+  // He Initialization accoutning for fan-in 
+  void HeRandomInit();
+  // Copys a certain weight matrix and bias vector to the layer. 
+  void insertWeightMatrixAndBias(E::MatrixXf &weights,E::VectorXf &biases);
+  // Sets the activation function of the layer.
+  void setActivationFunction(E::VectorXf (*func)(const E::VectorXf&),
+                             E::VectorXf (*der)(const E::VectorXf&));
 
-  // Backward pass methods.
+
+  // Forward pass methods:
+
+  // Calculate output based on input layer using activation function
+  void setOutput(const E::VectorXf& input);
+  // Output softmax 
+  void setSoftMaxOutput(const E::VectorXf& input);
+
+
+  // Backward pass methods:
   
-  // (For output layer only) asserts the output layer's local gradients.
-  // The given vector is the expected output of the layer.
-  void assertOutputLocalGradient(const E::VectorXf &expected_output);
-  // (For all other vectors) calculated the local gradients based on 
-  // the next layer's local gradients.
-  void backPropagate();
-  // Updates all the weights according to the local gradients. 
-  void updateWeights();
+  // Set local errors with softmax.
+  void setSoftMaxErrors(uint32_t correct_class_idx);
+
+  // Set local errors based on forward layer's parameters
+  void setLocalErrors(const E::VectorXf& next_errors,
+                      const E::MatrixXf& next_weights);
+
+  // Gradient accumulation methods:
+
+  // Reset all weight gradients
+  void resetAllGradients();
+  // Accumulates gradients
+  void accumulateGradients(const E::VectorXf& input);
+  // Updates all the weights according to the weight gradients and batch size
+  void updateWeights(const uint32_t batch_size);
+
+
+  // Softmax methods 
+
 
 };
 
