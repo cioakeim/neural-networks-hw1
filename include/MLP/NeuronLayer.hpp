@@ -8,7 +8,7 @@
 namespace E=Eigen;
 
 #define RATE 1e-3
-#define WEIGHT_DECAY_RATE 1e-3
+#define WEIGHT_DECAY_RATE 1e-7
 
 
 /**
@@ -17,7 +17,7 @@ namespace E=Eigen;
  *
 */
 class NeuronLayer{
-private:
+protected:
   // Structure
   E::MatrixXf weights; //< The weights of the layer that determine this
                        // layer's outputs. 
@@ -96,10 +96,6 @@ public:
   void accumulateGradients(const E::VectorXf& input);
   // Updates all the weights according to the weight gradients and batch size
   void updateWeights(const uint32_t batch_size);
-
-
-  // Softmax methods 
-
 
 };
 

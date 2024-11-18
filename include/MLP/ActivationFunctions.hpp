@@ -11,6 +11,9 @@ namespace E=Eigen;
 E::VectorXf reLU(const E::VectorXf& in);
 E::VectorXf reLUder(const E::VectorXf& reLU_output);
 
+float reLU(const float in);
+float reLUder(const float in);
+
 // Tanh
 E::VectorXf tanh(const E::VectorXf& in);
 E::VectorXf tanhder(const E::VectorXf& tanh_output);

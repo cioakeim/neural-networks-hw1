@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(NeuralNetworksProject1 VERSION 1.0 LANGUAGES CXX)
+project(NeuralNetworksProject1 VERSION 1.0 LANGUAGES CUDA CXX)
 
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
@@ -11,6 +11,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 add_subdirectory("${PROJECT_SOURCE_DIR}/src/CommonLib")
 add_subdirectory("${PROJECT_SOURCE_DIR}/src/MLP")
 add_subdirectory("${PROJECT_SOURCE_DIR}/src/NearestNeighbors")
+add_subdirectory("${PROJECT_SOURCE_DIR}/src/CudaMLP")
 
 # Standard CMake Structure 
 

@@ -92,6 +92,10 @@ void MultiLayerPerceptron::setDataset(std::vector<SamplePoint> *training_set,
 
 // Forward pass for 1 sample
 void MultiLayerPerceptron::forwardPass(E::VectorXf& input){ 
+  if(layers.size()==0){
+    output_layer.setSoftMaxOutput(input);
+    return;
+  }
   layers[0].setOutput(input);
   const uint32_t hidden_depth=layers.size();
   for(int i=1;i<hidden_depth;i++){

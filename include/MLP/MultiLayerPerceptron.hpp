@@ -12,11 +12,16 @@ namespace E=Eigen;
  * @brief Implementation of a feed forward MLP.
  */
 class MultiLayerPerceptron{
-private:
+protected:
   std::vector<NeuronLayer> layers; //< All intermediate layers.
   NeuronLayer output_layer; //< The output layer
   std::vector<SamplePoint> *training_set; //< The training set
   std::vector<SamplePoint> *test_data; //< The test data
+  // Cuda memory methods
+  CudaSamplePoint* cuda_training;
+  int training_size;
+  CudaSamplePoint* cuda_test;
+  int test_size;
   // For keeping count of training loss function 
   E::VectorXf loss_array;
   

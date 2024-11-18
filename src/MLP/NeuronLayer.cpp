@@ -171,8 +171,8 @@ void NeuronLayer::updateWeights(const uint32_t batch_size){
   std::cout<<"Updating weights:"<<std::endl;
   const E::MatrixXf temp=(rate)*weightGradients;
   std::cout<<"Mean square of weight gradients: "<<temp.array().square().maxCoeff()<<std::endl;;
-  this->weights-=(rate)*(weightGradients);//+(lambda*weights);
-  this->biases-=(rate)*(biasGradients);//+(lambda*biases); 
+  this->weights-=(rate)*(weightGradients)+(lambda*weights);
+  this->biases-=(rate)*(biasGradients)+(lambda*biases); 
 }
 
 
