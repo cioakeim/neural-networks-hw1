@@ -74,13 +74,10 @@ public:
    *
    * @param[in] sample The sample to be shown.
   */
-  void printSample(SamplePoint& sample);
+  //void printSample(SamplePoint& sample);
 
 };
 
-class Cifar100Handler{
-  
-};
 
 
 #endif 

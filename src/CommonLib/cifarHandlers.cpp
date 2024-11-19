@@ -3,7 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <opencv4/opencv2/opencv.hpp>
+//#include <opencv4/opencv2/opencv.hpp>
 
 // Constructor
 Cifar10Handler::Cifar10Handler(const char dataset_folder_path[])
@@ -105,7 +105,7 @@ std::string Cifar10Handler::getClassName(int class_id){
   return "";
 }
 
-
+/**
 
 void Cifar10Handler::printSample(SamplePoint& sample){
   const int height=32,width=32;
@@ -130,5 +130,6 @@ void Cifar10Handler::printSample(SamplePoint& sample){
   cv::waitKey(0);
 
 }
+*/
 
 

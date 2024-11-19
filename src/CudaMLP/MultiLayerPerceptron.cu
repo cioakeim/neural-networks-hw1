@@ -62,7 +62,7 @@ void MultiLayerPerceptronCUDA::setActivationFunction(float (*f)(const float),
   output_layer.setElWiseActivationFunction(f,f_dot);
 }
 
-void MultiLayerPerceptron::setDataset(std::vector<SamplePoint> *training_set,
+void MultiLayerPerceptronCUDA::setDataset(std::vector<SamplePoint> *training_set,
                 std::vector<SamplePoint> *test_data){
   this->training_set=training_set;
   this->test_data=test_data;
@@ -205,8 +205,8 @@ float MultiLayerPerceptronCUDA::testModel(){
 }
 
 uint8_t MultiLayerPerceptronCUDA::returnPredictedLabelCUDA(){
-  thrust::device_ptr<float> d_ptr(output_layer.getCUDAOutputsPtr());
-  thrust::device_ptr<float> max_iter=thrust::max(d_ptr,d_ptr+output_size);
+  thrust::device_ptr<const float> d_ptr(output_layer.getCUDAOutputsPtr());
+  thrust::device_ptr<const float> max_iter=thrust::max(d_ptr,d_ptr+output_size);
   return static_cast<uint8_t>(max_iter-d_ptr); 
 }
 
