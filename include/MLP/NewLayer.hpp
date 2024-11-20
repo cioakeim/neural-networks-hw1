@@ -2,7 +2,7 @@
 #define NEW_LAYER_HPP 
 
 #include <iostream>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <vector>
 
 #define WEIGHT_DECAY 1e-7

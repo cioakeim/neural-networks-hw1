@@ -3,7 +3,6 @@
 #include <sstream>
 #include <vector>
 #include <string>
-#include <eigen3/Eigen/Dense>
 
 #include "CommonLib/cifarHandlers.hpp"
 #include "CudaMLP/MultiLayerPerceptron.hpp"

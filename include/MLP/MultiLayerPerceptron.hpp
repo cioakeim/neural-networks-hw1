@@ -2,7 +2,7 @@
 #define MULTI_LAYER_PERCEPTRON_HPP
 
 #include <vector>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include "MLP/NeuronLayer.hpp"
 #include "CommonLib/basicStructs.hpp"
 

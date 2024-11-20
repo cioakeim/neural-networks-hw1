@@ -1,7 +1,7 @@
 #ifndef BASIC_STRUCTS_HPP
 #define BASIC_STRUCTS_HPP
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 namespace E=Eigen;
 

@@ -2,7 +2,7 @@
 #define K_NEAREST_NEIGHBOR_CLASSIFIERS_HPP
 
 #include "CommonLib/basicStructs.hpp"
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <vector>
 
 namespace E=Eigen;

@@ -3,9 +3,9 @@
 #include <sstream>
 #include <vector>
 #include <string>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <opencv4/opencv2/opencv.hpp>
-#include "cifarHandlers.hpp"
+#include "CommonLib/cifarHandlers.hpp"
 #include "NeuronLayer.hpp"
 #include "activationFunctions.hpp"
 #include <time.h>

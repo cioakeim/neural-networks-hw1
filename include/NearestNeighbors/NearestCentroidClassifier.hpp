@@ -1,7 +1,7 @@
 #ifndef NEAREST_CENTROID_CLASSIFIER_HPP
 #define NEAREST_CENTROID_CLASSIFIER_HPP
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include "CommonLib/basicStructs.hpp"
 #include <vector>
 

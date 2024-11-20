@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <eigen3/Eigen/Dense>
 //#include <opencv4/opencv2/opencv.hpp>
 #include "NearestNeighbors/NearestCentroidClassifier.hpp"
 #include "NearestNeighbors/NearestNeighborClassifiers.hpp"

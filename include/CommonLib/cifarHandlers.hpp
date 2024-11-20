@@ -4,7 +4,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include "basicStructs.hpp"
 
 

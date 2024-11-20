@@ -2,7 +2,7 @@
 #define NEW_MLP_HPP
 
 #include <iostream>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <vector>
 #include "MLP/NewLayer.hpp"
 #include "CommonLib/basicStructs.hpp"

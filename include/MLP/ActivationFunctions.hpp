@@ -1,7 +1,7 @@
 #ifndef ACTIVATION_FUNCTIONS_HPP
 #define ACTIVATION_FUNCTIONS_HPP
 
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 
 namespace E=Eigen;
 

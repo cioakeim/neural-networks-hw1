@@ -1,8 +1,8 @@
 #ifndef NEURON_LAYER_HPP
 #define NEURON_LAYER_HPP 
 
-#include <eigen3/Eigen/Dense>
-#include <eigen3/Eigen/src/Core/Matrix.h>
+#include <Eigen/Dense>
+#include <Eigen/src/Core/Matrix.h>
 #include <vector>
 
 namespace E=Eigen;

@@ -1,6 +1,6 @@
 #include "MLP/NeuronLayer.hpp"
 #include <iostream>
-#include <eigen3/Eigen/Dense>
+#include <Eigen/Dense>
 #include <random>
 #include <fstream>
 
