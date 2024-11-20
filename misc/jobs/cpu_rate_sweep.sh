@@ -7,7 +7,7 @@
 #SBATCH --time=10:00:00
 
 
-module load gcc/13.2.0-iqpfkya cmake/3.27.9-uxdlqo3 eigen/3.4.0-titj7ys 
+module load gcc/13.2.0-iqpfkya cmake/3.27.9-nmh6tto eigen/3.4.0-titj7ys 
 
 
 dataset_path="/home/c/cioakeim/nns/cifar-10-batches-bin"
