@@ -2,6 +2,7 @@
 #define CUDA_MULTI_LAYER_PERCEPTRON_HPP
 
 #include "MLP/MultiLayerPerceptron.hpp"
+#include "MLP/NewMLP.hpp"
 #include "CudaMLP/NeuronLayer.hpp"
 #include "vector"
 
@@ -39,8 +40,10 @@ public:
 
   void setActivationFunction(float (*f)(const float),
                              float (*f_dot)(const float));
+
   void setDataset(std::vector<SamplePoint> *training_set,
                   std::vector<SamplePoint> *test_data);
+
 
   // Random initial weight
   void randomInit();

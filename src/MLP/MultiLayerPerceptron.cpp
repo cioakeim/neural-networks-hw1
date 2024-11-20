@@ -2,9 +2,16 @@
 #include "MLP/NeuronLayer.hpp"
 #include <cmath>
 #include <iostream>
+#include <fstream>
+#include <filesystem>
+#include <string>
+#include <random>
+#include <algorithm>
+
 
 #define epsilon 1e-7
 
+namespace fs=std::filesystem;
 
 
 // Standard definition of width and depth.
@@ -49,6 +56,33 @@ MultiLayerPerceptron::MultiLayerPerceptron(uint32_t input_width,
 }
 
 
+
+int count_directories_in_path(const fs::path& path) {
+    int dir_count = 0;
+
+    // Check if the given path exists and is a directory
+    if (fs::exists(path) && fs::is_directory(path)) {
+        // Iterate through the directory entries
+        for (const auto& entry : fs::directory_iterator(path)) {
+            // Increment the count for each directory (since we know all entries are directories)
+            ++dir_count;
+        }
+    }
+    return dir_count;
+}
+// Create from stored 
+MultiLayerPerceptron::MultiLayerPerceptron(std::string file_path,
+                     std::string name){
+  this->name=name;
+  fs::path path(file_path+"/"+name);
+  int layer_count=count_directories_in_path(path);
+  for(int i=0;i<layer_count-1;i++){
+    layers.emplace_back(file_path+"/"+name+"/layer"+std::to_string(i));
+  }
+  output_layer=NeuronLayer(file_path+"/"+name+"/output_layer");
+}
+
+
 // Configuration:
 
 // Random initial weight
@@ -85,8 +119,56 @@ void MultiLayerPerceptron::setDataset(std::vector<SamplePoint> *training_set,
   this->training_set=training_set;
   this->test_data=test_data;
   this->loss_array=E::VectorXf((*training_set).size());
+  // Create permutation
+  training_shuffle=std::vector<int>(training_set->size());
+  for(int i=0;i<training_set->size();i++){
+    training_shuffle[i]=i;
+  }
+
 }
 
+void ensureDirectoryExists(std::string path){
+  fs::path dir(path);
+  if(!fs::exists(dir)){
+    fs::create_directories(dir);
+  }
+}
+
+// Storing a NN 
+void MultiLayerPerceptron::storeToFiles(std::string file_path){
+  // Ensure store location exists
+  ensureDirectoryExists(file_path);
+  // Create main directory 
+  fs::create_directory(file_path+"/"+name);
+  std::ofstream os;
+  for(int i=0;i<layers.size();i++){
+    // Open main module
+    std::string folder=file_path+"/"+name+"/layer"+std::to_string(i);
+    fs::create_directory(folder);
+    // Store files
+    layers[i].storeLayer(folder);
+  }
+  // For output
+  std::string folder=file_path+"/"+name+"/output_layer";
+  fs::create_directory(folder);
+  output_layer.storeLayer(folder);
+}
+
+void MultiLayerPerceptron::printNN(){
+  for(int i=0;i<layers.size();i++){
+    std::cout<<"Layer "<<i<<":"<<std::endl;
+    std::cout<<"Weights: "<<std::endl;
+    layers[i].printWeights();
+    std::cout<<"Biases: "<<std::endl;
+    layers[i].printBiases();
+  }
+  std::cout<<"Output Layer "<<":"<<std::endl;
+  std::cout<<"Weights: "<<std::endl;
+  output_layer.printWeights();
+  std::cout<<"Biases: "<<std::endl;
+  output_layer.printBiases();
+
+}
 
 // Basic methods.
 
@@ -146,7 +228,7 @@ void MultiLayerPerceptron::updateAllWeights(const uint32_t batch_size){
 // Run a whole batch in the MLP and update weights. Return 0 if not at EOF
 int MultiLayerPerceptron::feedBatchAndUpdate(const int batch_size, const int starting_index){
   // Check for out of bounds access to training data
-  const int final_idx=std::max(static_cast<int>(training_set->size()-1)
+  const int final_idx=std::min(static_cast<int>(training_set->size()-1)
                                ,starting_index+batch_size-1);
   // Make sure all local gradients are zero
   uint32_t hidden_depth=layers.size();
@@ -158,8 +240,9 @@ int MultiLayerPerceptron::feedBatchAndUpdate(const int batch_size, const int sta
   //std::cout<<"Starting batch: "<<starting_index<<std::endl;
   // Run whole batch
   for(int i=starting_index;i<=final_idx;i++){
-     uint8_t &label=(*training_set)[i].label;
-     E::VectorXf &vector=(*training_set)[i].vector;
+    const int idx=training_shuffle[i];
+    uint8_t &label=(*training_set)[idx].label;
+    E::VectorXf &vector=(*training_set)[idx].vector;
     //std::cout<<"Pass: "<<i<<std::endl;
     // Forward pass 
     forwardPass(vector);
@@ -179,9 +262,16 @@ int MultiLayerPerceptron::feedBatchAndUpdate(const int batch_size, const int sta
 
 // Runs a whole epoch on the dataset
 float MultiLayerPerceptron::runEpoch(const int batch_size){
+  // RNG for shuffling
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::shuffle(training_shuffle.begin(), 
+               training_shuffle.end(), gen);
+
   const uint32_t training_size=training_set->size();
   std::cout<<"Got size: "<<training_size<<std::endl;
   for(int i=0;i<training_size;i+=batch_size){
+  // Randomize the idx array 
     std::cout<<"Running batch at starting index: "<<i<<std::endl;
     // If returns 1 available data is dry so go home
     feedBatchAndUpdate(batch_size,i);

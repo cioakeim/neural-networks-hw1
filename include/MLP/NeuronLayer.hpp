@@ -45,10 +45,13 @@ public:
   NeuronLayer(uint32_t input_size,uint32_t layer_size);
   // Initialize intermediate hidden layer.
   NeuronLayer(NeuronLayer* previous_layer,uint32_t layer_size);
+  // Retrieve from storage
+  NeuronLayer(std::string folder_path);
 
   // Read-only getters 
   const E::MatrixXf& getWeightsRef() const {return weights;}
   const E::VectorXf& getOutputsRef() const {return outputs;}
+  const E::VectorXf& getBiasesRef() const {return biases;}
   const E::VectorXf& getLocalErrorsRef() const {return local_errors;}
 
   // Print methods
@@ -57,6 +60,8 @@ public:
   void printOutputs();
   void printGradients();
 
+  // Store to location (2 files, 1 for weights and 1 for bias)
+  void storeLayer(std::string folder_path);
 
   // Configuration:
 

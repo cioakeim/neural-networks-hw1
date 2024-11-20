@@ -10,11 +10,19 @@ E::VectorXf reLUder(const E::VectorXf& reLU_output){
   return (reLU_output.array()>0).cast<float>();
 }
 
-float reLU(const float in){
+float reLU_el(const float in){
   return (in>0) ? in : 0.0f;
 }
-float reLUder(const float in){
+float reLUder_el(const float in){
   return (in>0) ? 1.0f : 0.0f;
+}
+
+E::MatrixXf reLU(const E::MatrixXf& in){
+  return in.cwiseMax(0.0);
+}
+
+E::MatrixXf reLUder(const E::MatrixXf& reLU_output){
+  return (reLU_output.array()>0).cast<float>();
 }
 
 

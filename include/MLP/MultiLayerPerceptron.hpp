@@ -13,10 +13,13 @@ namespace E=Eigen;
  */
 class MultiLayerPerceptron{
 protected:
+  // Each MLP object has a name for storing the weight arrays.
+  std::string name;
   std::vector<NeuronLayer> layers; //< All intermediate layers.
   NeuronLayer output_layer; //< The output layer
   std::vector<SamplePoint> *training_set; //< The training set
   std::vector<SamplePoint> *test_data; //< The test data
+  std::vector<int> training_shuffle; // Permutation for random run
   // Cuda memory methods
   CudaSamplePoint* cuda_training;
   int training_size;
@@ -24,6 +27,8 @@ protected:
   int test_size;
   // For keeping count of training loss function 
   E::VectorXf loss_array;
+  // For random dataset access
+  
   
   
 
@@ -38,11 +43,15 @@ public:
   MultiLayerPerceptron(uint32_t input_width,
                        std::vector<uint32_t> hidden_layer_sequence,
                        uint32_t output_width);
+  MultiLayerPerceptron(std::string file_path,
+                       std::string name);
   
 
 
   // Config.
 
+  // Set name 
+  void setName(std::string name){this->name=name;}
   // Random initial weight
   void randomInit();
   // Random init with scaling 
@@ -52,6 +61,11 @@ public:
                              E::VectorXf (*der)(const E::VectorXf&));
   void setDataset(std::vector<SamplePoint> *training_set,
                   std::vector<SamplePoint> *test_data);
+
+  // Storing a NN 
+  void storeToFiles(std::string file_path);
+
+  void printNN();
 
   // Basic methods.
 

@@ -6,7 +6,7 @@
 //#include <opencv4/opencv2/opencv.hpp>
 
 // Constructor
-Cifar10Handler::Cifar10Handler(const char dataset_folder_path[])
+Cifar10Handler::Cifar10Handler(std::string dataset_folder_path)
     : dataset_folder_path(dataset_folder_path){
   // Init binary fstreams
   std::ostringstream oss;

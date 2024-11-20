@@ -24,7 +24,7 @@ private:
 
 public:
   // Only logical constructor
-  Cifar10Handler(const char dataset_folder_path[]); 
+  Cifar10Handler(std::string path); 
 
   // Destructor
   ~Cifar10Handler();

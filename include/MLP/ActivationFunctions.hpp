@@ -8,11 +8,12 @@ namespace E=Eigen;
 // Each function comes with its derivative 
 
 // ReLU
-E::VectorXf reLU(const E::VectorXf& in);
-E::VectorXf reLUder(const E::VectorXf& reLU_output);
 
-float reLU(const float in);
-float reLUder(const float in);
+E::MatrixXf reLU(const E::MatrixXf& in);
+E::MatrixXf reLUder(const E::MatrixXf& reLU_output);
+
+float reLU_el(const float in);
+float reLUder_el(const float in);
 
 // Tanh
 E::VectorXf tanh(const E::VectorXf& in);

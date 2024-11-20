@@ -10,6 +10,8 @@
 #include "MLP/ActivationFunctions.hpp"
 #include <time.h>
 #include <csignal>
+#include <cuda_runtime.h>
+#include <cublas_v2.h>
 
 #define MAX_TRAINING 200
 #define MAX_TEST 100
@@ -49,7 +51,7 @@ int main(){
   MultiLayerPerceptronCUDA mlp=MultiLayerPerceptronCUDA(INPUT_WIDTH,
                                                 layer_sequence,
                                                 OUTPUT_WIDTH);
-  mlp.setActivationFunction(reLU,reLUder);
+  mlp.setActivationFunction(reLU_el,reLUder_el);
   //mlp.setActivationFunction(tanh,tanhder);
   mlp.setDataset(&training_set,&test_set);
   //mlp.randomInit();

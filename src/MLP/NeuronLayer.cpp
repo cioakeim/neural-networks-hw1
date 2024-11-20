@@ -2,6 +2,7 @@
 #include <iostream>
 #include <eigen3/Eigen/Dense>
 #include <random>
+#include <fstream>
 
 #include <omp.h>
 
@@ -34,6 +35,39 @@ NeuronLayer::NeuronLayer(NeuronLayer* previous_layer,uint32_t layer_size){
   this->local_errors=E::VectorXf(layer_size);
 }
 
+// Retrieve from storage
+NeuronLayer::NeuronLayer(std::string folder_path){
+  std::ifstream is;
+  is.open(folder_path+"/weights.csv",std::ios::in);
+  int rows,cols;
+  is>>rows>>cols;
+  this->weights=E::MatrixXf(rows,cols);
+  for(int i=0;i<rows;i++){
+    for(int j=0;j<cols;j++){
+      is>>weights(i,j);
+    }
+  }
+  is.close();
+
+  is.open(folder_path+"/biases.csv",std::ios::in);
+  int size;
+  is>>size;
+  this->biases=E::VectorXf(size);
+  for(int i=0;i<size;i++){
+    is>>biases(i);
+  }
+  is.close();
+  const int input_size=cols;
+  const int layer_size=rows;
+  this->weightGradients=E::MatrixXf(layer_size,input_size);
+  this->biasGradients=E::VectorXf(layer_size);
+  this->outputs=E::VectorXf(layer_size);
+  this->f=nullptr;
+  this->f_dot=nullptr;
+  this->local_errors=E::VectorXf(layer_size);
+}
+
+
 // Simple print methods
 void NeuronLayer::printWeights(){
   std::cout << this->weights << std::endl;
@@ -49,6 +83,26 @@ void NeuronLayer::printOutputs(){
 
 void NeuronLayer::printGradients(){
   std::cout << this->local_errors<< std::endl;
+}
+
+void NeuronLayer::storeLayer(std::string folder_path){
+    std::ofstream os;
+    os.open(folder_path+"/weights.csv",std::ios::out);
+    os<<weights.rows()<<" "<<weights.cols()<<"\n";
+    for(int i=0;i<weights.rows();i++){
+      for(int j=0;j<weights.cols();j++){
+        os<<weights(i,j)<<" ";
+      }
+      os<<"\n";
+    }
+    os.close();
+
+    os.open(folder_path+"/biases.csv",std::ios::out);
+    os<<biases.size()<<" "<<"\n"; 
+    for(int i=0;i<biases.size();i++){
+      os<<biases(i)<<"\n";
+    }
+    os.close();
 }
 
 // Configuration:
@@ -165,12 +219,12 @@ void NeuronLayer::accumulateGradients(const E::VectorXf& input){
 
 // Updates all the weights according to the local gradients. 
 void NeuronLayer::updateWeights(const uint32_t batch_size){
-  std::cout<<"Current weights range: "<<weights.minCoeff()<<" "<<weights.maxCoeff()<<std::endl;
+  //std::cout<<"Current weights range: "<<weights.minCoeff()<<" "<<weights.maxCoeff()<<std::endl;
   const float rate=RATE/batch_size;
   const float lambda=WEIGHT_DECAY_RATE;
-  std::cout<<"Updating weights:"<<std::endl;
+  //std::cout<<"Updating weights:"<<std::endl;
   const E::MatrixXf temp=(rate)*weightGradients;
-  std::cout<<"Mean square of weight gradients: "<<temp.array().square().maxCoeff()<<std::endl;;
+  //std::cout<<"Mean square of weight gradients: "<<temp.array().square().maxCoeff()<<std::endl;;
   this->weights-=(rate)*(weightGradients)+(lambda*weights);
   this->biases-=(rate)*(biasGradients)+(lambda*biases); 
 }
