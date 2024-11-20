@@ -15,6 +15,7 @@ endif()
 #include_directories(${CUDA_INCLUDE_DIRS})
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/third-party/eigen-3.4.0)
 
 add_subdirectory("${PROJECT_SOURCE_DIR}/src/CommonLib")
 add_subdirectory("${PROJECT_SOURCE_DIR}/src/MLP")
