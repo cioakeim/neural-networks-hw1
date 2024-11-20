@@ -1,6 +1,5 @@
 build/
 testing/
-misc/
 data/
 
 compile_flags.txt
