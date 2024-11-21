@@ -47,6 +47,7 @@ void Layer::store(std::string folder_path){
   std::ofstream os;
   // Store weights
   os.open(folder_path+"/weights.csv",std::ios::out);
+  std::cout<<"Weights mean square: "<<weights.array().square().mean()<<std::endl;
   os<<weights.rows()<<" "<<weights.cols()<<"\n";
   for(int i=0;i<weights.rows();i++){
     for(int j=0;j<weights.cols();j++){
@@ -57,6 +58,7 @@ void Layer::store(std::string folder_path){
   os.close();
   // Store biases
   os.open(folder_path+"/biases.csv",std::ios::out);
+  std::cout<<"Bias mean square: "<<biases.array().square().mean()<<std::endl;
   os<<biases.size()<<" "<<"\n"; 
   for(int i=0;i<biases.size();i++){
     os<<biases(i)<<"\n";

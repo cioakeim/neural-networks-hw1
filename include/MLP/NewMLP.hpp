@@ -18,7 +18,7 @@ using VectorFunction = std::function<MatrixXf(const MatrixXf)>;
 class MLP{
 protected:
   // For I/O purposes
-  std::string name;
+  std::string store_path;
   // Structure
   std::vector<Layer> layers;
   int depth;
@@ -49,7 +49,7 @@ public:
       VectorFunction activation_derivative,
       float learning_rate,int batch_size);
 
-  void setName(std::string name){this->name=name;}
+  void setStorePath(std::string path){this->store_path=path;}
 
   // Do forward and backward pass in batches
   void forwardBatchPass(const MatrixXf& input);
@@ -68,7 +68,7 @@ public:
   void softMaxBackward(const VectorXi& correct_labels);
 
   // Store to place
-  void store(std::string file_path);
+  void store();
 
   // Config:
   void randomInit();

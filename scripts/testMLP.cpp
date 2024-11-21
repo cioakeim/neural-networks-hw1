@@ -8,6 +8,7 @@
 #include "CommonLib/cifarHandlers.hpp"
 #include "CommonLib/basicFuncs.hpp"
 #include "MLP/MultiLayerPerceptron.hpp"
+#include "CommonLib/LogHandler.hpp"
 #include "MLP/ActivationFunctions.hpp"
 #include "MLP/NewMLP.hpp"
 #include <time.h>
@@ -25,7 +26,7 @@
 #define HIDDEN_DEPTH 4
 
 #define EPOCHS 15
-#define BATCH_SIZE 50
+#define BATCH_SIZE 100
 
 std::ofstream file;
 void handle_signal(int signal) {
@@ -42,6 +43,7 @@ void handle_signal(int signal) {
 // Usage: ./testMLP [dataset_path] [nn_path] [learning_rate] [batch_size] 
 //                  [epochs] [layer_sequence]
 int main(int argc,char* argv[]){
+  // CONFIG:
   std::string dataset_path="../data/cifar-10-batches-bin";
   std::string nn_path="../data/networks";
   std::string log_filename="epoch_accuracy_log.csv";
@@ -96,30 +98,44 @@ int main(int argc,char* argv[]){
   std::cout<<"Constructing MLP.."<<std::endl;
   MLP mlp=MLP(layer_sequence,INPUT_WIDTH,
               reLU,reLUder,rate,batch_size);
-  std::string name=std::to_string(rate)+"_"+std::to_string(batch_size)+"_"+
-                    argv[5]+"_reLU";
-  mlp.setName(name);
-  std::cout<<"Name: "<<name<<std::endl;
+
   //MultiLayerPerceptron mlp=MultiLayerPerceptron(nn_path,"testNet");
   mlp.insertDataset(training_set,test_set);
   training_set.clear();
   test_set.clear();
   std::cout<<"Clear"<<std::endl;
 
-  //mlp.randomInit();
+  // Initialization
   mlp.randomInit();
   std::cout<<"Construction successful.."<<std::endl;
 
-  std::string nn_root=nn_path+"/"+name;
-  ensure_a_path_exists(nn_root);
+  // Store current config's info
+  std::string nn_root=create_network_folder(nn_path);
+  mlp.setStorePath(nn_root);
+  file.open(nn_root+"/info.txt",std::ios::out);
+  file<<"Rate: "<<rate<<"\nBatch size: "<<batch_size
+      <<"\nEpochs: "<<epochs<<"\nLayers: ";
+  for(int i=0;i<layer_sequence.size();i++){
+    file<<layer_sequence[i]<<",";
+  }
+  file<<"\n";
+  file.close();
+
+
+
   file.open(nn_root+"/"+log_filename,std::ios::out);
   file<<"epoch,J_train,J_test,accuracy"<<std::endl;
   std::signal(SIGINT, handle_signal);
+  std::signal(SIGTERM, handle_signal);
 
+  // Keep track of time
+  LogHandler log=LogHandler();
   float J_test;
   float J_train;
   float accuracy;
   float best_J_test=INFINITY;
+
+  log.start_timer();
   for(int epoch=0;epoch<EPOCHS;epoch++){
     std::cout<<"Epoch: "<<epoch<<std::endl;
     J_train=mlp.runEpoch();
@@ -130,10 +146,14 @@ int main(int argc,char* argv[]){
     // If result is best, store 
     if(J_test<best_J_test){
       best_J_test=J_test;
-      mlp.store(nn_path);
+      mlp.store();
     }
   } 
+  log.end_timer();
   file.close();  // Close the file when done
-  //mlp.storeToFiles(nn_path);
+  // Store time
+  file.open(nn_root+"/info.txt",std::ios::app);
+  file<<"Execution time: "<<log.elapsed_seconds()<<"\n";
+  file.close();
   return 0;
 }

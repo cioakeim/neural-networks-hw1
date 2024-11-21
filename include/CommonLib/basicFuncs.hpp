@@ -5,6 +5,8 @@
 
 void ensure_a_path_exists(std::string file_path);
 
+std::string create_network_folder(std::string folder_path);
+
 
 
 #endif

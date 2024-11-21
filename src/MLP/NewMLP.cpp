@@ -52,7 +52,6 @@ MLP::MLP(std::string file_path,std::string name,
   activation_derivative(std::move(activation_derivative)),
   learning_rate(learning_rate),
   batch_size(batch_size){
-  this->name=name;
   fs::path path(file_path+"/"+name);
   int layer_count=count_directories_in_path(path);
   for(int i=0;i<layer_count;i++){
@@ -82,7 +81,9 @@ void MLP::forwardBatchPass(const MatrixXf& input){
 float MLP::getBatchLosss(const VectorXi& correct_labels){
   const float epsilon=1e-7;
   float sum=0;
-  for(int i=0;i<batch_size;i++){
+
+  const int sample_count=correct_labels.size();
+  for(int i=0;i<sample_count;i++){
     sum-=log(layers[depth-1].activations(correct_labels[i],i)+epsilon); 
   }
   return sum/batch_size;
@@ -130,25 +131,24 @@ float MLP::runEpoch(){
   VectorXf batch_losses=VectorXf(training_size/batch_size);
 
   for(int idx=0;idx<training_size;idx+=batch_size){
-    std::cout<<"Idx: "<<idx<<std::endl;
     const MatrixXf& input=training_set.middleCols(idx,batch_size);
-    const VectorXi& labels=training_labels.segment(idx,idx+batch_size);
+    const VectorXi& labels=training_labels.segment(idx,batch_size);
     forwardBatchPass(input);
     batch_losses[idx/batch_size]=getBatchLosss(labels);
-    std::cout<<"Loss: "<<batch_losses[idx/batch_size]<<std::endl;
     backwardBatchPass(input,labels);
   }
   return batch_losses.mean();
 }
 
 void MLP::testModel(float& J_test,float& accuracy){
-  const int batch_size=1000;
+  std::cout<<"Testing..."<<std::endl;
+  const int batch_size=(1000<test_labels.size())?(1000):(test_labels.size());
   const int test_size=test_set.cols();
   int success_count=0; 
   VectorXf batch_losses=VectorXf(test_size/batch_size);
   for(int idx=0;idx<test_size;idx+=batch_size){
     const MatrixXf& input=test_set.middleCols(idx,batch_size);
-    const VectorXi& labels=test_labels.segment(idx,idx+batch_size);
+    const VectorXi& labels=test_labels.segment(idx,batch_size);
     forwardBatchPass(input);
     batch_losses[idx/batch_size]=getBatchLosss(labels);
     // Count successful predictions
@@ -165,17 +165,19 @@ void MLP::testModel(float& J_test,float& accuracy){
 }
 
 // I/O
-void MLP::store(std::string file_path){
+void MLP::store(){
+  std::cout<<"Storing network"<<std::endl;
   // Create directory
-  fs::path dir(file_path);
+  std::cout<<store_path<<std::endl;
+  fs::path dir(store_path);
+  std::cout<<dir.string()<<std::endl;
   if(!fs::exists(dir)){
     fs::create_directories(dir);
   }
-  fs::create_directory(file_path+"/"+name);
   std::ofstream os;
   for(int i=0;i<layers.size();i++){
     // Open main module
-    std::string folder=file_path+"/"+name+"/layer"+std::to_string(i);
+    std::string folder=dir.string()+"/layer_"+std::to_string(i);
     fs::create_directory(folder);
     // Store files
     layers[i].store(folder);
