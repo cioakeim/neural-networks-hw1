@@ -150,23 +150,17 @@ void MLP::testModel(float& J_test,float& accuracy){
   int success_count=0; 
   VectorXf batch_losses=VectorXf(test_size/batch_size);
   for(int idx=0;idx<test_size;idx+=batch_size){
-    std::cout<<"IDX: "<<idx<<std::endl;
     const MatrixXf& input=test_set.middleCols(idx,batch_size);
-    std::cout<<"COOL"<<std::endl;
     const VectorXi& labels=test_labels.segment(idx,batch_size);
-    std::cout<<"COOL"<<std::endl;
     forwardBatchPass(input);
-    std::cout<<"COOL"<<std::endl;
     batch_losses[idx/batch_size]=getBatchLosss(labels);
-    std::cout<<"COOL"<<std::endl;
     // Count successful predictions
     for(int i=0;i<batch_size;i++){
       E::Index c_idx;
       layers[depth-1].activations.col(i).maxCoeff(&c_idx);
-      if(c_idx==labels[idx+i]){
+      if(c_idx==labels[i]){
         success_count++;
       }
-    std::cout<<"COOL"<<std::endl;
     }
   }
   J_test=batch_losses.mean();
