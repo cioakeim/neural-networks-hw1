@@ -69,7 +69,9 @@ __global__ static void batchLossKernel(const float* d_activations,
   }
 }
 
-void DeviceMLP::getBatchLoss(const int* correct_labels,float* loss){
+float DeviceMLP::getBatchLoss(const int* correct_labels,
+                              const int batch_size,
+                              float* loss){
   const int threads=32;
   const int blocks=(batch_size+threads-1)/threads;
   batchLossKernel<<<blocks,threads>>>(d_layers[depth-1].d_activations,
@@ -80,6 +82,7 @@ void DeviceMLP::getBatchLoss(const int* correct_labels,float* loss){
   thrust::device_vector<float> buf(batch_loss_buffer,batch_loss_buffer+batch_size);
   float mean=thrust::reduce(buf.begin(),buf.end(),0.0f,thrust::plus<float>())/batch_size;
   cudaMemcpy(loss, &mean, sizeof(float), cudaMemcpyHostToDevice);
+  return mean;
 }
 
 void DeviceMLP::backwardBatchPass(const float* d_input,
@@ -98,9 +101,68 @@ void DeviceMLP::backwardBatchPass(const float* d_input,
   }
 }
 
-void runDeviceEpoch();
+float DeviceMLP::runDeviceEpoch(){
+  shuffleDataset();
+  datasetToDevice();
 
-void testDeviceModel(float& J_test,float& accuracy);
+  for(int i=0;i<training_size;i+=batch_size){
+    forwardBatchPass(d_training_set+i);
+    getBatchLoss(d_training_labels+i*input_size,batch_size,
+                 loss_array+i/batch_size);
+    backwardBatchPass(d_training_set+i*input_size, d_training_labels+i);
+  }
+  thrust::device_vector<float> buf(loss_array,loss_array+training_size/batch_size);
+  float sum=thrust::reduce(buf.begin(),buf.end(),0.0f,thrust::plus<float>());
+  return (sum/training_size)*batch_size;
+}
+
+
+__global__ static void testKernel(char* d_success_array,
+                                  const int batch_size,
+                                  const int* d_correct_labels,
+                                  const float* d_activations,
+                                  const int input_size
+                                  ){
+  const int idx=blockIdx.x*blockDim.x+threadIdx.x;
+  const int col_idx=idx/input_size;
+  if(idx<batch_size){
+    int best_idx=0;
+    for(int i=0;i<input_size;i++){
+      if(d_activations[col_idx*input_size+i]<d_activations[col_idx*input_size+best_idx]){
+        best_idx=i;
+      }
+    }
+    d_success_array[idx]=(d_correct_labels[idx]==best_idx);
+  } 
+}
+
+void DeviceMLP::testDeviceModel(float& J_test,float& accuracy){
+  const int batch_size=(1000<test_labels.size())?(1000):(test_labels.size());
+  const int test_size=test_set.cols();
+  int success_count=0; 
+  VectorXf batch_losses=VectorXf(test_size/batch_size);
+
+  // For reducing
+  char* d_success_array;
+  cudaMalloc(&d_success_array,batch_size*sizeof(char));
+  thrust::device_vector<char> buf(d_success_array,d_success_array+batch_size);
+  const int threads=256;
+  const int blocks=(batch_size+threads-1)/threads;
+  for(int i=0;i<test_size;i++){
+    forwardBatchPass(d_test_set+i); 
+    batch_losses[i/batch_size]=getBatchLoss(d_test_labels+i,
+                                            batch_size,
+                                            batch_loss_buffer);
+    testKernel<<<blocks,threads>>>(d_success_array,
+                                   batch_size,
+                                   d_test_labels+i,
+                                   d_layers[depth-1].d_activations,
+                                   input_size);   
+    success_count+=thrust::reduce(buf.begin(),buf.end(),0.0f,thrust::plus<char>());
+  }
+  J_test=batch_losses.mean();
+  accuracy=static_cast<float>(success_count)/test_size;
+}
 
 // I/O
 
@@ -109,13 +171,13 @@ void DeviceMLP::datasetToDevice(){
   cudaMemcpy(d_training_set, training_set.data(), 
              training_set.size()*sizeof(float), cudaMemcpyHostToDevice);
   cudaMemcpy(d_training_labels, training_labels.data(), 
-             training_labels.size()*sizeof(float), cudaMemcpyHostToDevice);
+             training_labels.size()*sizeof(int), cudaMemcpyHostToDevice);
 
   test_size=test_set.cols();
   cudaMemcpy(d_test_set, test_set.data(), 
              test_set.size()*sizeof(float), cudaMemcpyHostToDevice);
   cudaMemcpy(d_test_labels, test_labels.data(), 
-             test_labels.size()*sizeof(float), cudaMemcpyHostToDevice);
+             test_labels.size()*sizeof(int), cudaMemcpyHostToDevice);
 
 
   if(batch_loss_buffer==nullptr){
@@ -126,7 +188,17 @@ void DeviceMLP::datasetToDevice(){
   }
 }
 
-void deviceToHost();
-void hostToDevice();
+// Only for network, not for anything else
+void DeviceMLP::deviceToHost(){
+  for(int i=0;i<depth;i++){
+    d_layers[i].storeToCPU(layers[i]);
+  }
+}
+
+void DeviceMLP::hostToDevice(){
+  for(int i=0;i<depth;i++){
+    d_layers[i].loadFromCPU(layers[i]);
+  }
+}
 
 

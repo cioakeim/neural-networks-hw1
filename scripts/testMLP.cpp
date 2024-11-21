@@ -16,8 +16,8 @@
 
 #define RATE 1e-3
 
-#define MAX_TRAINING 50e3
-#define MAX_TEST 10e3
+#define MAX_TRAINING 1e3
+#define MAX_TEST 500
 
 #define INPUT_WIDTH 32*32*3
 #define OUTPUT_WIDTH 10

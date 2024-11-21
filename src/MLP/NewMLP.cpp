@@ -144,13 +144,21 @@ void MLP::testModel(float& J_test,float& accuracy){
   std::cout<<"Testing..."<<std::endl;
   const int batch_size=(1000<test_labels.size())?(1000):(test_labels.size());
   const int test_size=test_set.cols();
+  std::cout<<"Batch_size: "<<batch_size<<std::endl;
+  std::cout<<"Test size: "<<test_size<<std::endl;
+
   int success_count=0; 
   VectorXf batch_losses=VectorXf(test_size/batch_size);
   for(int idx=0;idx<test_size;idx+=batch_size){
+    std::cout<<"IDX: "<<idx<<std::endl;
     const MatrixXf& input=test_set.middleCols(idx,batch_size);
+    std::cout<<"COOL"<<std::endl;
     const VectorXi& labels=test_labels.segment(idx,batch_size);
+    std::cout<<"COOL"<<std::endl;
     forwardBatchPass(input);
+    std::cout<<"COOL"<<std::endl;
     batch_losses[idx/batch_size]=getBatchLosss(labels);
+    std::cout<<"COOL"<<std::endl;
     // Count successful predictions
     for(int i=0;i<batch_size;i++){
       E::Index c_idx;
@@ -158,6 +166,7 @@ void MLP::testModel(float& J_test,float& accuracy){
       if(c_idx==labels[idx+i]){
         success_count++;
       }
+    std::cout<<"COOL"<<std::endl;
     }
   }
   J_test=batch_losses.mean();

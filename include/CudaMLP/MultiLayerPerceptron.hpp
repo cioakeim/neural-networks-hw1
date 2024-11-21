@@ -17,10 +17,10 @@ class DeviceMLP:public MLP{
   float (*f_dot)(const float);
   // Training on device 
   float* d_training_set;
-  float* d_training_labels;
+  int* d_training_labels;
   int training_size;
   float* d_test_set;
-  float* d_test_labels;
+  int* d_test_labels;
   int test_size;
   // For cuda operations
   cublasHandle_t handle;
@@ -61,12 +61,14 @@ class DeviceMLP:public MLP{
 
   void forwardBatchPass(const float* d_input);
 
-  void getBatchLoss(const int* correct_labels,float* loss);
+  float getBatchLoss(const int* correct_labels,
+                     const int batch_size,
+                     float* loss);
 
   void backwardBatchPass(const float* d_input,
                          const int* correct_labels);
 
-  void runDeviceEpoch();
+  float runDeviceEpoch();
 
   void testDeviceModel(float& J_test,float& accuracy);
 
