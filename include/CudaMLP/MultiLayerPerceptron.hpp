@@ -9,71 +9,74 @@
 /**
  * @brief Extension of MLP for CUDA support.
 */
-class MultiLayerPerceptronCUDA{
-protected:
+class DeviceMLP:public MLP{
+  // Structural
+  std::vector<DeviceLayer> d_layers;
   int input_size;
-  int output_size;
-  int depth; //< Only hidden layers
-  // Cuda versions of needed fields.
-  std::vector<NeuronLayerCUDA> layers; //< All intermediate layers.
-  NeuronLayerCUDA output_layer; //< The output layer
-  std::vector<SamplePoint> *training_set; //< The training set
-  std::vector<SamplePoint> *test_data; //< The test data
-  // Cuda memory methods
-  SamplePoint* cuda_training;
+  float (*f)(const float);
+  float (*f_dot)(const float);
+  // Training on device 
+  float* d_training_set;
+  float* d_training_labels;
   int training_size;
-  SamplePoint* cuda_test;
+  float* d_test_set;
+  float* d_test_labels;
   int test_size;
-  // For keeping count of training loss function 
+  // For cuda operations
+  cublasHandle_t handle;
+  // Buffers 
+  float* batch_loss_buffer;
   float* loss_array;
+
+
+  DeviceMLP(const std::vector<int>& layer_sizes,
+      const int input_size,
+      VectorFunction activation_function,
+      VectorFunction activation_derivative,
+      float learning_rate,
+      int batch_size);
+
+  DeviceMLP(std::string file_path,std::string name,
+      VectorFunction activation_function,
+      VectorFunction activation_derivative,
+      float learning_rate,int batch_size);
+
+  ~DeviceMLP(){
+    if(batch_loss_buffer!=nullptr){
+      cudaFree(batch_loss_buffer);
+    }
+    if(loss_array!=nullptr){
+      cudaFree(loss_array);
+    }
+    cublasDestroy_v2(handle);
+  }
+
+  void setDeviceFunction(float (*f)(const float),
+                         float (*f_dot)(const float)){
+    this->f=f;
+    this->f_dot=f_dot;
+  }
+
+  // CUDA versions of MLP
+
+  void forwardBatchPass(const float* d_input);
+
+  void getBatchLoss(const int* correct_labels,float* loss);
+
+  void backwardBatchPass(const float* d_input,
+                         const int* correct_labels);
+
+  void runDeviceEpoch();
+
+  void testDeviceModel(float& J_test,float& accuracy);
+
+  // I/O
+
+  void datasetToDevice();
   
+  void deviceToHost();
+  void hostToDevice();
 
-  
-public:
-  // Only needed constructor
-  MultiLayerPerceptronCUDA(uint32_t input_width,
-                           std::vector<uint32_t> layer_sequence,
-                           uint32_t output_width);
-  ~MultiLayerPerceptronCUDA();
-
-  // Config.
-
-  void setActivationFunction(float (*f)(const float),
-                             float (*f_dot)(const float));
-
-  void setDataset(std::vector<SamplePoint> *training_set,
-                  std::vector<SamplePoint> *test_data);
-
-
-  // Random initial weight
-  void randomInit();
-  // Random init with scaling 
-  void HeRandomInit();
-
-
-  // Interface between CPU/GPU
-
-  void copyNNToDevice();
-  void copyNNFromDevice();
-
-  void passDatasetToDevice();
-
-  // Methods extended for CUDA use:
-
-  void forwardPass(float* d_input);
-  void backwardPass(uint32_t correct_class_dix,
-                    const float* d_input);
-  void updateAllWeights(const uint32_t batch_size);
-
-  // Stochastic gradient descend
-
-  void feedBatchAndUpdate(const int batch_size,const int starting_index);  
-
-  float runEpoch(const int batch_size);
-
-  float testModel();
-
-  uint8_t returnPredictedLabelCUDA();
 
 };
 

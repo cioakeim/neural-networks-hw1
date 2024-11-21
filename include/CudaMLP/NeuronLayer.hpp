@@ -2,78 +2,55 @@
 #define CUDA_NEURON_LAYER_HPP
 
 #include "MLP/NeuronLayer.hpp"
+#include "MLP/NewLayer.hpp"
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
 
 
+
 /**
- * @brief CUDA extension of the Neuron Layer class
+ * @brief CUDA extension of the Layer struct
 */
-class NeuronLayerCUDA:public NeuronLayer{
-private:
-  // I/O size are needed since CUDA matrices need the dimensions
-  uint32_t input_size;
-  uint32_t output_size;
-  // CUDA Pointers to NeuronLayer's standard members
-  // Structural
+struct DeviceLayer{
+  const int input_size;
+  const int output_size;
+  const int batch_size;
   float* d_weights;
   float* d_biases;
-  float* d_outputs;
-  // Element wise functions 
-  float (*elWiseF)(const float);
-  float (*elWiseF_dot)(const float);
-  // Training data
-  float* d_local_errors;
-  float* d_weightGradients;
-  float* d_biasGradients;
-  // For matrix mult
-  cublasHandle_t handle;
+  float* d_activations;
+  float* d_errors;
 
-public:
-  // Constructor extensions
-  NeuronLayerCUDA();
-  NeuronLayerCUDA(NeuronLayerCUDA* previous_layer,uint32_t layer_size);
-  NeuronLayerCUDA(uint32_t input_size,uint32_t layer_size);
-  // Only for CUDA memory
-  ~NeuronLayerCUDA();
+  DeviceLayer(int input_size,int output_size,int batch_size);
 
-  // Set activation function element-wise 
-  void setElWiseActivationFunction(float (*elWiseF)(const float),
-                                   float (*elWiseF_dot)(const float));
+  DeviceLayer(Layer &cpu_layer);
 
-  // Interface for layer communication
-  const float* getCUDAWeightsPtr() const {return d_weights;}
-  const float* getCUDAOutputsPtr() const {return d_outputs;}
-  const float* getCUDALocalErrorsPtr() const {return d_local_errors;}
-  uint32_t getInputSize() const {return input_size;}
-  uint32_t getOutputSize() const {return output_size;}
+  ~DeviceLayer(){
+    cudaFree(d_weights);
+    cudaFree(d_biases);
+    cudaFree(d_activations);
+    cudaFree(d_errors);
+  }
 
-  // Interface between CPU and GPU memory
+  // I/O
+  void loadFromCPU(const Layer& layer);
+  void storeToCPU(Layer& layer);
 
-  // Transfers all the data to the GPU
-  void copyLayerToDevice();
-  // Gets all the data from the GPU
-  void copyLayerFromDevice();
+  void activateLayer(const float* d_input,float (*f)(const float),
+                     cublasHandle_t& handle);
+  void softMaxOut(float* d_input,cublasHandle_t& handle);
 
-  // All methods needed for passes written for GPU:
+  void activateError(float* d_next_weights,
+                     float* d_next_errors,
+                     const int next_output,
+                     float (*f_dot)(const float),
+                     cublasHandle_t& handle);
 
-  // Forward pass:
-  void setOutputCUDA(const float* d_input);
-  void setSoftMaxOutputCUDA(const float* d_input);
+  void softMaxError(const int* correct_labels);
 
-  // Backward pass:
-  void setSoftMaxErrorsCUDA(uint32_t correct_class_idx);
-  void setLocalErrorsCUDA(const float* d_next_errors,
-                          const float* d_next_weights,
-                          const uint32_t next_output_size);
-
-  // Gradient descent methods:
-
-  void resetAllGradientsCUDA();
-  void accumulateGradientsCUDA(const float* d_input);
-  void updateWeightsCUDA(const uint32_t batchsize);
+  void updateWeights(const float* input,
+                     const float rate,
+                     cublasHandle_t& handle);
 
 
 };
-
 #endif // !CUDA_NEURON_LAYER_HPP

@@ -50,6 +50,10 @@ public:
       float learning_rate,int batch_size);
 
   void setStorePath(std::string path){this->store_path=path;}
+  void setFunction(VectorFunction f,VectorFunction f_dot){
+    this->activation_function=f;
+    this->activation_derivative=f_dot;
+  }
 
   // Do forward and backward pass in batches
   void forwardBatchPass(const MatrixXf& input);

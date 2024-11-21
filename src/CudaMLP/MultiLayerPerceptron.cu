@@ -3,215 +3,130 @@
 #include <thrust/device_ptr.h>
 #include <thrust/reduce.h>
 #include <thrust/functional.h>
+#include <thrust/device_vector.h>
 #include <cstdint>
 
 
 #define epsilon 10e-7
 
-// Only needed constructor
-MultiLayerPerceptronCUDA::MultiLayerPerceptronCUDA(uint32_t input_size,
-                         std::vector<uint32_t> layer_sequence,
-                         uint32_t output_size){
+
+
+DeviceMLP::DeviceMLP(const std::vector<int>& layer_sizes,
+                     const int input_size,
+                     VectorFunction activation_function,
+                     VectorFunction activation_derivative,
+                     float learning_rate,
+                     int batch_size):MLP(layer_sizes,
+                                         input_size,
+                                         activation_function,
+                                         activation_derivative,
+                                         learning_rate,
+                                         batch_size){
+  for(int i=0;i<depth;i++){
+    d_layers.emplace_back(layers[i]);
+  }
   this->input_size=input_size;
-  this->output_size=output_size;
-  this->depth=layer_sequence.size();
-  this->cuda_test=nullptr;
-  this->cuda_training=nullptr;
-  if(layer_sequence.size()==0){
-    output_layer=NeuronLayerCUDA(input_size,output_size);
-    return;
-  }
-  layers.emplace_back(input_size,layer_sequence[0]);
-  for(int i=1;i<depth;i++){
-    layers.emplace_back(&layers[i-1],layer_sequence[i]);
-  }
-  output_layer=NeuronLayerCUDA(&layers[depth-1],output_size);
-}
+  cublasCreate_v2(&handle);
+  this->batch_loss_buffer=nullptr;
+  this->loss_array=nullptr;
+};
 
-MultiLayerPerceptronCUDA::~MultiLayerPerceptronCUDA(){
-  if(this->cuda_test!=nullptr){
-    cudaFree(cuda_test);
-  }
-  if(this->cuda_training!=nullptr){
-    cudaFree(cuda_training);
-  }
-}
-
-// Config.
-
-// Random initial weight
-void MultiLayerPerceptronCUDA::randomInit(){
+DeviceMLP::DeviceMLP(std::string file_path,std::string name,
+                    VectorFunction activation_function,
+                    VectorFunction activation_derivative,
+                    float learning_rate,int batch_size)
+                      :MLP(file_path,
+                          name,
+                          activation_function,
+                          activation_derivative,
+                          learning_rate,
+                          batch_size){
   for(int i=0;i<depth;i++){
-    layers[i].assertRandomWeights();
+    d_layers.emplace_back(layers[i]);
   }
-  output_layer.assertRandomWeights();
-}
-// Random init with scaling 
-void MultiLayerPerceptronCUDA::HeRandomInit(){
-  for(int i=0;i<depth;i++){
-    layers[i].HeRandomInit();
-  }
-  output_layer.HeRandomInit();
-}
-
-void MultiLayerPerceptronCUDA::setActivationFunction(float (*f)(const float),
-                                                float (*f_dot)(const float)){
-  for(int i=0;i<depth;i++){
-    layers[i].setElWiseActivationFunction(f,f_dot);
-  }
-  output_layer.setElWiseActivationFunction(f,f_dot);
-}
-
-void MultiLayerPerceptronCUDA::setDataset(std::vector<SamplePoint> *training_set,
-                std::vector<SamplePoint> *test_data){
-  this->training_set=training_set;
-  this->test_data=test_data;
-}
-
-// Interface between CPU/GPU
-
-void MultiLayerPerceptronCUDA::copyNNToDevice(){
-  for(int i=0;i<depth;i++){
-    layers[i].copyLayerToDevice();
-  } 
-  output_layer.copyLayerToDevice();
-}
-
-void MultiLayerPerceptronCUDA::copyNNFromDevice(){
-  for(int i=0;i<depth;i++){
-    layers[i].copyLayerFromDevice();
-  } 
-  output_layer.copyLayerFromDevice();
-}
-
-void MultiLayerPerceptronCUDA::passDatasetToDevice(){
-  this->test_size=(*test_data).size();
-  this->training_size=(*training_set).size();
-  int dim=(*training_set)[0].vector.size();
-  // Pass test
-  if(cuda_test==nullptr){
-    cudaMalloc(&cuda_test,test_size*sizeof(SamplePoint));
-  }
-  cudaMemcpy(cuda_test,(*test_data).data(),test_size*sizeof(SamplePoint),
-             cudaMemcpyHostToDevice);
-  // Pass training
-  if(cuda_training==nullptr){
-    cudaMalloc(&cuda_training,training_size*sizeof(SamplePoint));
-  }
-  cudaMemcpy(cuda_training,(*training_set).data(),training_size*sizeof(SamplePoint),
-             cudaMemcpyHostToDevice);
+  this->input_size=d_layers[0].input_size;
 }
 
 
-// Methods extended for CUDA use:
-
-void MultiLayerPerceptronCUDA::forwardPass(float* d_input){
-  layers[0].setOutputCUDA(d_input);
-  for(int i=1;i<depth;i++){
-    layers[i].setOutputCUDA(layers[i-1].getCUDAOutputsPtr());
+void DeviceMLP::forwardBatchPass(const float* d_input){
+  d_layers[0].activateLayer(d_input,f,handle);
+  for(int i=1;i<depth-1;i++){
+    d_layers[i].activateLayer(d_layers[i-1].d_activations,
+                              f,handle);
   }
-  output_layer.setSoftMaxOutputCUDA(layers[depth-1].getCUDAOutputsPtr());
+  d_layers[depth-1].softMaxOut(d_layers[depth-2].d_activations, handle);
 }
 
-void MultiLayerPerceptronCUDA::backwardPass(uint32_t correct_class_idx,
-                  const float* d_input){
-  output_layer.setSoftMaxErrorsCUDA(correct_class_idx);
-  if(depth==0){
-    output_layer.accumulateGradientsCUDA(d_input);
-    return;
-  }
-  // Create local errors
-  layers[depth-1].setLocalErrorsCUDA(output_layer.getCUDALocalErrorsPtr(), 
-                                     output_layer.getCUDAWeightsPtr(), 
-                                     output_layer.getOutputSize());
-  for(int i=depth-2;i>=0;i--){
-    layers[i].setLocalErrorsCUDA(layers[i+1].getCUDALocalErrorsPtr(), 
-                                 layers[i+1].getCUDAWeightsPtr(), 
-                                 layers[i+1].getOutputSize());
-  }
-  // Accumulate
-  output_layer.accumulateGradientsCUDA(layers[depth-1].getCUDAOutputsPtr());
-  for(int i=depth-2;i>=0;i++){
-    layers[i].accumulateGradientsCUDA(layers[i-1].getCUDAOutputsPtr());
-  }
-  layers[0].accumulateGradientsCUDA(d_input);
-}
 
-void MultiLayerPerceptronCUDA::updateAllWeights(const uint32_t batch_size){
-  for(int i=0;i<depth;i++){
-    layers[i].updateWeightsCUDA(batch_size);
-  }
-  output_layer.updateWeightsCUDA(batch_size);
-}
-
-// Stochastic gradient descend
-
-__global__ void logLossArrayKernel(const int sample_idx,
-                                   const float* output_layer,
-                                   const uint8_t label,
-                                   float* loss_array){
+__global__ static void batchLossKernel(const float* d_activations,
+                                       const int output_size,
+                                       const int batch_size,
+                                       const int* correct_labels,
+                                       float* batch_loss_buffer){
   const int idx=blockIdx.x*blockDim.x+threadIdx.x;
-  if(idx!=0){
-    return;
+  if(idx<batch_size){
+    batch_loss_buffer[idx]=-log(epsilon+d_activations[output_size*idx+correct_labels[idx]]); 
   }
-  const float y_predicted=output_layer[label];
-  loss_array[sample_idx]=-log(y_predicted+epsilon);
 }
 
-void MultiLayerPerceptronCUDA::feedBatchAndUpdate(const int batch_size,
-                                                  const int starting_index){
-  const int final_idx=std::max(static_cast<int>(training_size),
-                               starting_index+batch_size-1);
-  // Reset local errors
+void DeviceMLP::getBatchLoss(const int* correct_labels,float* loss){
+  const int threads=32;
+  const int blocks=(batch_size+threads-1)/threads;
+  batchLossKernel<<<blocks,threads>>>(d_layers[depth-1].d_activations,
+                                      d_layers[depth-1].output_size,
+                                      batch_size,
+                                      correct_labels,
+                                      batch_loss_buffer);
+  thrust::device_vector<float> buf(batch_loss_buffer,batch_loss_buffer+batch_size);
+  float mean=thrust::reduce(buf.begin(),buf.end(),0.0f,thrust::plus<float>())/batch_size;
+  cudaMemcpy(loss, &mean, sizeof(float), cudaMemcpyHostToDevice);
+}
+
+void DeviceMLP::backwardBatchPass(const float* d_input,
+                                  const int* correct_labels){
+  d_layers[depth-1].softMaxError(correct_labels); 
+  for(int i=depth-2;i>=0;i--){
+    d_layers[i].activateError(d_layers[i+1].d_weights, 
+                              d_layers[i+1].d_errors, 
+                              d_layers[i+1].output_size, 
+                              f_dot,handle);
+  }
+  d_layers[0].updateWeights(d_input,learning_rate,handle);
   for(int i=0;i<depth;i++){
-    layers[i].resetAllGradientsCUDA();
+    d_layers[i].updateWeights(d_layers[i-1].d_activations,
+                              learning_rate,handle);
   }
-  output_layer.resetAllGradientsCUDA();
-
-  for(int i=starting_index;i<=final_idx;i++){
-    uint8_t &label=(*training_set)[i].label;
-    // Forward 
-    forwardPass(cuda_training[i].vector.data());
-    // Add loss to loss array
-    logLossArrayKernel<<<1,1>>>(i,output_layer.getCUDAOutputsPtr(),
-                                label,loss_array);
-    // Backward pass
-    backwardPass(label,cuda_training[i].vector.data());
-  }
-  updateAllWeights(batch_size);
 }
 
-float MultiLayerPerceptronCUDA::runEpoch(const int batch_size){
-  for(int i=0;i<training_size;i++){
-    feedBatchAndUpdate(batch_size,i);
+void runDeviceEpoch();
+
+void testDeviceModel(float& J_test,float& accuracy);
+
+// I/O
+
+void DeviceMLP::datasetToDevice(){
+  training_size=training_set.cols();
+  cudaMemcpy(d_training_set, training_set.data(), 
+             training_set.size()*sizeof(float), cudaMemcpyHostToDevice);
+  cudaMemcpy(d_training_labels, training_labels.data(), 
+             training_labels.size()*sizeof(float), cudaMemcpyHostToDevice);
+
+  test_size=test_set.cols();
+  cudaMemcpy(d_test_set, test_set.data(), 
+             test_set.size()*sizeof(float), cudaMemcpyHostToDevice);
+  cudaMemcpy(d_test_labels, test_labels.data(), 
+             test_labels.size()*sizeof(float), cudaMemcpyHostToDevice);
+
+
+  if(batch_loss_buffer==nullptr){
+    cudaMalloc(&batch_loss_buffer,batch_size*sizeof(float));
   }
-  thrust::device_ptr<float> d_ptr(loss_array);
-  float sum=thrust::reduce(d_ptr,d_ptr+training_size,
-                           0.0f,thrust::plus<float>());
-  return sum/training_size;
-}
-
-float MultiLayerPerceptronCUDA::testModel(){
-  uint32_t success_count=0;
-  uint8_t prediction;
-  for(int i=0;i<test_size;i++){
-    forwardPass(cuda_test[i].vector.data());
-    prediction=returnPredictedLabelCUDA();
-    if(prediction==(*test_data)[i].label){
-      success_count++;
-    }
+  if(loss_array==nullptr){
+    cudaMalloc(&loss_array,(training_size/batch_size)*sizeof(float));
   }
-  return static_cast<float>(success_count)/test_size;
 }
 
-uint8_t MultiLayerPerceptronCUDA::returnPredictedLabelCUDA(){
-  thrust::device_ptr<const float> d_ptr(output_layer.getCUDAOutputsPtr());
-  thrust::device_ptr<const float> max_iter=thrust::max(d_ptr,d_ptr+output_size);
-  return static_cast<uint8_t>(max_iter-d_ptr); 
-}
-
-
-
-
+void deviceToHost();
+void hostToDevice();
 
 

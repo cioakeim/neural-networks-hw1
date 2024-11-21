@@ -7,13 +7,12 @@
 #SBATCH --time=10:00:00
 
 
-module load gcc/13.2.0-iqpfkya cmake/3.27.9-nmh6tto 
-#eigen/3.4.0-titj7ys 
+module load gcc/13.2.0-iqpfkya cmake/3.27.9-nmh6tto eigen/3.4.0-titj7ys 
 
 
 dataset_path="/home/c/cioakeim/nns/cifar-10-batches-bin"
 nn_path="/home/c/cioakeim/nns/configs"
-rate="$1"
+rate="1e-3"
 batch_size="100"
 epochs="15"
 layer_sequence="2048,512,124,10"

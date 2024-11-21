@@ -153,9 +153,9 @@ void MLP::testModel(float& J_test,float& accuracy){
     batch_losses[idx/batch_size]=getBatchLosss(labels);
     // Count successful predictions
     for(int i=0;i<batch_size;i++){
-      E::Index idx;
-      layers[depth-1].activations.col(i).maxCoeff(&idx);
-      if(idx==labels[i]){
+      E::Index c_idx;
+      layers[depth-1].activations.col(i).maxCoeff(&c_idx);
+      if(c_idx==labels[idx+i]){
         success_count++;
       }
     }
