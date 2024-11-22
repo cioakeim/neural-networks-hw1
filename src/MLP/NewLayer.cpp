@@ -39,6 +39,8 @@ void Layer::updateWeights(const MatrixXf& input,
   const float a=rate/batch_size;
   this->weights-=a*weightGradients+WEIGHT_DECAY*this->weights;
   this->biases-=a*biasGradients+WEIGHT_DECAY*this->biases;
+  std::cout<<"Positive weights percentage: "<<
+    (weights.array()>0).cast<float>().mean()<<std::endl;
 }
 
 
@@ -47,7 +49,7 @@ void Layer::store(std::string folder_path){
   std::ofstream os;
   // Store weights
   os.open(folder_path+"/weights.csv",std::ios::out);
-  std::cout<<"Weights mean square: "<<weights.array().square().mean()<<std::endl;
+  std::cout<<"Weights positive percentage: "<<(weights.array()>0).cast<float>().mean()<<std::endl;
   os<<weights.rows()<<" "<<weights.cols()<<"\n";
   for(int i=0;i<weights.rows();i++){
     for(int j=0;j<weights.cols();j++){
@@ -58,7 +60,7 @@ void Layer::store(std::string folder_path){
   os.close();
   // Store biases
   os.open(folder_path+"/biases.csv",std::ios::out);
-  std::cout<<"Bias mean square: "<<biases.array().square().mean()<<std::endl;
+  std::cout<<"Bias mean square: "<<(biases.array()>0).cast<float>().mean()<<std::endl;
   os<<biases.size()<<" "<<"\n"; 
   for(int i=0;i<biases.size();i++){
     os<<biases(i)<<"\n";
@@ -78,7 +80,7 @@ void Layer::HeRandomInit(){
 
   for(int i=0;i<rows;i++){
     for(int j=0;j<cols;j++){
-      weights(i,j)=abs(dist(gen));
+      weights(i,j)=(dist(gen));
     }
     biases(i)=abs(dist(gen));
   }

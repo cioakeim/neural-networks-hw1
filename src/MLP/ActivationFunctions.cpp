@@ -1,14 +1,17 @@
 #include "MLP/ActivationFunctions.hpp"
 #include <cmath>
+#include <random>
 
 E::VectorXf reLU(const E::VectorXf& in){
   return in.cwiseMax(0.0);
 }
 
-
 E::VectorXf reLUder(const E::VectorXf& reLU_output){
   return (reLU_output.array()>0).cast<float>();
 }
+
+E::MatrixXf reLUdropout(const E::MatrixXf& in);
+E::MatrixXf reLUder(const E::MatrixXf& reLU_output);
 
 float reLU_el(const float in){
   return (in>0) ? in : 0.0f;

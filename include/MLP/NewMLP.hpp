@@ -6,6 +6,7 @@
 #include <vector>
 #include "MLP/NewLayer.hpp"
 #include "CommonLib/basicStructs.hpp"
+#include <random>
 
 #define WEIGHT_DECAY 1e-7
 
@@ -14,6 +15,34 @@ using E::MatrixXf;
 using E::VectorXf;
 using E::VectorXi;
 using VectorFunction = std::function<MatrixXf(const MatrixXf)>;
+
+// For dropout creation
+struct Dropout{
+  const float rate;
+  std::mt19937 gen;
+  std::uniform_real_distribution<float> dist;
+  Eigen::MatrixXf mask;
+
+  Dropout():
+    rate(0){};
+
+  Dropout(MatrixXf input, const float rate):
+    rate(rate){
+    gen=std::mt19937(42);
+    dist=std::uniform_real_distribution<float>(0,1);
+    mask=MatrixXf(input.rows(),input.cols());
+  }
+
+  void maskInput(E::MatrixXf& input){
+    // Generate mask 
+    mask=(Eigen::MatrixXf::NullaryExpr(input.rows(),input.cols(), [&]() {
+        return dist(gen) > rate ? 1.0f : 0.0f;
+    }));
+    // Apply
+    input=input.array()*mask.array();
+  }
+};
+
 
 class MLP{
 protected:
@@ -33,6 +62,8 @@ protected:
   MatrixXf test_set;
   VectorXi test_labels;
 
+  // Dropout for each layer
+  std::vector<Dropout> drop;
 
   
 public:
@@ -82,5 +113,9 @@ public:
 
   
 };
+
+
+
+
 
 #endif

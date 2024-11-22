@@ -14,10 +14,10 @@
 #include <time.h>
 #include <csignal>
 
-#define RATE 1e-3
+#define LEARN_RATE 1e-3
 
-#define MAX_TRAINING 1e3
-#define MAX_TEST 500
+#define MAX_TRAINING 50e3
+#define MAX_TEST 10e3
 
 #define INPUT_WIDTH 32*32*3
 #define OUTPUT_WIDTH 10
@@ -26,7 +26,7 @@
 #define HIDDEN_DEPTH 4
 
 #define EPOCHS 15
-#define BATCH_SIZE 100
+#define BATCH_SIZE 1000
 
 std::ofstream file;
 void handle_signal(int signal) {
@@ -47,7 +47,7 @@ int main(int argc,char* argv[]){
   std::string dataset_path="../data/cifar-10-batches-bin";
   std::string nn_path="../data/networks";
   std::string log_filename="epoch_accuracy_log.csv";
-  float rate=RATE;
+  float rate=LEARN_RATE;
   int batch_size=BATCH_SIZE;
   int epochs=EPOCHS;
   std::vector<int> layer_sequence={2048,512,124,10};

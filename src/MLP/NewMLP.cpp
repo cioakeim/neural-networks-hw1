@@ -19,12 +19,15 @@ MLP::MLP(const std::vector<int>& layer_sizes,
   activation_derivative(std::move(activation_derivative)),
   learning_rate(learning_rate),
   batch_size(batch_size){
-  
+  const float rate=0.2;
   layers.emplace_back(input_size,layer_sizes[0],batch_size);
+  drop.emplace_back(layers[0].activations,rate);
   for(int i=1;i<layer_sizes.size();i++){
     layers.emplace_back(layer_sizes[i-1],layer_sizes[i],
                         batch_size);
+    drop.emplace_back(layers[i].activations,rate);
   }
+   
 }
 
 // Auxiliary
@@ -66,11 +69,13 @@ void MLP::forwardBatchPass(const MatrixXf& input){
   // Initial layer
   layers[0].activations=activation_function((layers[0].weights*input).colwise()
                                             +layers[0].biases);
+  drop[0].maskInput(layers[0].activations);
 
   for(int i=1;i<depth-1;i++){
     layers[i].activations=activation_function((layers[i].weights*
                                               layers[i-1].activations).colwise()+
                                               layers[i].biases);
+    drop[i].maskInput(layers[i].activations);
   }
   // Softmax output 
   layers[depth-1].activations=(layers[depth-1].weights*layers[depth-2].activations).colwise()+
