@@ -5,14 +5,7 @@ project(NeuralNetworksProject1 VERSION 1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-option(CUDA_EXT "Option to create CUDA extensions" OFF)
-if(CUDA_EXT)
-enable_language(CUDA)
-find_package(CUDAToolkit REQUIRED)
-endif()
 
-#find_package(CUDA REQUIRED)
-#include_directories(${CUDA_INCLUDE_DIRS})
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/third-party/eigen-3.4.0)
@@ -20,9 +13,6 @@ include_directories(${PROJECT_SOURCE_DIR}/third-party/eigen-3.4.0)
 add_subdirectory("${PROJECT_SOURCE_DIR}/src/CommonLib")
 add_subdirectory("${PROJECT_SOURCE_DIR}/src/MLP")
 add_subdirectory("${PROJECT_SOURCE_DIR}/src/NearestNeighbors")
-if(CUDA_EXT)
-add_subdirectory("${PROJECT_SOURCE_DIR}/src/CudaMLP")
-endif()
 
 # Standard CMake Structure 
 
@@ -42,12 +32,10 @@ target_link_libraries(testMLP PRIVATE mlp_lib)
 target_link_libraries(testMLP PRIVATE common_lib)
 target_compile_options(testMLP PRIVATE -O3 -Wall -Wextra)
 
-if(CUDA_EXT)
-add_executable(testCudaMLP "${SCRIPTS}/testCudaMLP.cu")
-target_link_libraries(testCudaMLP PRIVATE cuda_mlp_lib)
-target_link_libraries(testCudaMLP PRIVATE common_lib)
-target_compile_options(testCudaMLP PRIVATE -O3 -Wall -Wextra)
-endif()
+add_executable(testMLP_Adam "${SCRIPTS}/testMLP_Adam.cpp")
+target_link_libraries(testMLP_Adam PRIVATE mlp_lib)
+target_link_libraries(testMLP_Adam PRIVATE common_lib)
+target_compile_options(testMLP_Adam PRIVATE -O3 -Wall -Wextra)
 
 add_executable(testStoredModel "${SCRIPTS}/testStoredModel.cpp")
 target_link_libraries(testStoredModel PRIVATE mlp_lib)

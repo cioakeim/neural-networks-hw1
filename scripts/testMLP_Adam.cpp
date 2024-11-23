@@ -18,8 +18,8 @@
 #define BETA_1 0.9
 #define BETA_2 0.999
 
-#define TRAINING_SIZE 1e3
-#define TEST_SIZE 2000
+#define TRAINING_SIZE 50e3
+#define TEST_SIZE 10e3
 
 #define INPUT_SIZE 32*32*3
 #define OUTPUT_SIZE 10
@@ -51,7 +51,7 @@ int main(int argc,char* argv[]){
   float rate=DEFAULT_LEARN_RATE;
   int batch_size=DEFAULT_BATCH_SIZE;
   int epochs=DEFAULT_EPOCHS;
-  std::vector<int> layer_sequence={512,512,124,10};
+  std::vector<int> layer_sequence={2048,512,124,10};
 
   // If parameters were passed
   if(argc>1){
@@ -105,6 +105,7 @@ int main(int argc,char* argv[]){
   test_set.clear();
   // Initialization
   mlp.randomInit();
+  mlp.activateAdam(BETA_1,BETA_2);
 
 
   std::cout<<"Setting up test results paths.."<<std::endl;

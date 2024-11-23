@@ -51,6 +51,12 @@ MLP::MLP(std::string file_path,std::string name,
 }
 
 
+void MLP::activateAdam(float beta_1,float beta_2){
+  for(int i=0;i<depth;i++){
+    layers[i].setAdam(learning_rate, beta_1, beta_2, batch_size);
+  }
+}
+
 // Do forward and backward pass in batches
 void MLP::forwardBatchPass(const MatrixXf& input){
   // Initial layer
@@ -116,6 +122,7 @@ float MLP::runEpoch(){
   VectorXf batch_losses=VectorXf(training_size/batch_size);
 
   for(int idx=0;idx<training_size;idx+=batch_size){
+    std::cout<<"IDX: "<<idx<<std::endl;
     const MatrixXf& input=training_set.middleCols(idx,batch_size);
     const VectorXi& labels=training_labels.segment(idx,batch_size);
     forwardBatchPass(input);

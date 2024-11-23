@@ -59,6 +59,7 @@ public:
     this->activation_function=f;
     this->activation_derivative=f_dot;
   }
+  void activateAdam(float beta_1,float beta_2);
 
   // Do forward and backward pass in batches
   void forwardBatchPass(const MatrixXf& input);

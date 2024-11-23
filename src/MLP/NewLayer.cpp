@@ -36,6 +36,12 @@ void Layer::updateWeights(const MatrixXf& input,
                           const float rate, const int batch_size){
   E::MatrixXf weightGradients=this->errors*(input.transpose());
   E::VectorXf biasGradients=this->errors.rowwise().sum();
+  if(adam.epsilon>0){
+    std::cout<<"Weight range: "<<weights.maxCoeff()<<" "<<weights.minCoeff()<<std::endl;
+    adam.update(weightGradients, biasGradients, weights, biases);
+    std::cout<<"Weight range: "<<weights.maxCoeff()<<" "<<weights.minCoeff()<<std::endl;
+    return;
+  }
   const float a=rate/batch_size;
   this->weights-=a*weightGradients+WEIGHT_DECAY*this->weights;
   this->biases-=a*biasGradients+WEIGHT_DECAY*this->biases;
@@ -80,7 +86,7 @@ void Layer::HeRandomInit(){
     for(int j=0;j<cols;j++){
       weights(i,j)=(dist(gen));
     }
-    biases(i)=abs(dist(gen));
+    biases(i)=(dist(gen));
   }
 }
 

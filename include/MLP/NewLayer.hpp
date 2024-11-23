@@ -6,6 +6,7 @@
 #include <vector>
 #include "MLP/Modifiers.hpp"
 
+
 #define WEIGHT_DECAY 1e-7
 
 namespace E=Eigen;
@@ -19,14 +20,21 @@ struct Layer{
   VectorXf biases;
   MatrixXf activations;
   MatrixXf errors;
+  // Adam for each layer
+  Adam adam; 
 
   Layer(int input_size,int output_size,int batch_size):
     weights(MatrixXf(output_size,input_size)),
     biases(VectorXf(output_size)),
     activations(MatrixXf(output_size,batch_size)),
-    errors(MatrixXf(output_size,batch_size)){};
+    errors(MatrixXf(output_size,batch_size)){
+  };
 
   Layer(std::string folder_path,const int batch_size);
+
+  void setAdam(float rate,float beta_1,float beta_2,int batch_size){
+    this->adam=Adam(rate,beta_1,beta_2,this->weights,this->biases,batch_size);
+  }
 
   // Simple prints
   void printWeights();
