@@ -30,14 +30,27 @@ DeviceLayer::DeviceLayer(Layer& cpu_layer):DeviceLayer(
 
 
 void DeviceLayer::loadFromCPU(const Layer& layer){
-  cudaMemcpy(d_weights, layer.weights.data(), 
+  cudaError_t err;
+  err=cudaMemcpy(d_weights, layer.weights.data(), 
              output_size*input_size*sizeof(float),cudaMemcpyHostToDevice);
-  cudaMemcpy(d_biases, layer.biases.data(), 
+  if(err!=cudaSuccess){
+    std::cout<<"Error in mcmpy: "<<cudaGetErrorString(err)<<std::endl;
+  }
+  err=cudaMemcpy(d_biases, layer.biases.data(), 
              output_size*sizeof(float),cudaMemcpyHostToDevice);
-  cudaMemcpy(d_activations, layer.activations.data(), 
+  if(err!=cudaSuccess){
+    std::cout<<"Error in mcmpy: "<<cudaGetErrorString(err)<<std::endl;
+  }
+  err=cudaMemcpy(d_activations, layer.activations.data(), 
              output_size*batch_size*sizeof(float),cudaMemcpyHostToDevice);
-  cudaMemcpy(d_errors, layer.errors.data(), 
+  if(err!=cudaSuccess){
+    std::cout<<"Error in mcmpy: "<<cudaGetErrorString(err)<<std::endl;
+  }
+  err=cudaMemcpy(d_errors, layer.errors.data(), 
              output_size*batch_size*sizeof(float),cudaMemcpyHostToDevice);
+  if(err!=cudaSuccess){
+    std::cout<<"Error in mcmpy: "<<cudaGetErrorString(err)<<std::endl;
+  }
 
 }
 

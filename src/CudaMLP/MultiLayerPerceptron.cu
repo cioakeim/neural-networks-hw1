@@ -46,6 +46,7 @@ DeviceMLP::DeviceMLP(std::string file_path,std::string name,
     d_layers.emplace_back(layers[i]);
   }
   this->input_size=d_layers[0].input_size;
+  std::cout<<"Batch size: "<<batch_size<<std::endl;
   cudaMalloc((void**)&batch_loss_buffer,batch_size*sizeof(float));
 }
 
@@ -68,7 +69,6 @@ __global__ static void batchLossKernel(const float* d_activations,
   const int idx=blockIdx.x*blockDim.x+threadIdx.x;
   if(idx<batch_size){
     batch_loss_buffer[idx]=-log(epsilon+d_activations[output_size*idx+correct_labels[idx]]); 
-    std::cout<<"Written stuff"<<std::endl;
   }
 }
 
