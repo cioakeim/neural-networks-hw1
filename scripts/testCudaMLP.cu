@@ -96,6 +96,7 @@ int main(int argc,char* argv[]){
   test_set.clear();
   // Initialization
   mlp.randomInit();
+  mlp.setDeviceFunction(reLU_el,reLUder_el);
   // LOAD TO GPU
   mlp.datasetToDevice();
   mlp.hostToDevice();

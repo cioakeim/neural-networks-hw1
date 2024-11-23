@@ -29,6 +29,7 @@ DeviceMLP::DeviceMLP(const std::vector<int>& layer_sizes,
   cublasCreate_v2(&handle);
   this->batch_loss_buffer=nullptr;
   this->loss_array=nullptr;
+  cudaMalloc((void**)&batch_loss_buffer,batch_size*sizeof(float));
 };
 
 DeviceMLP::DeviceMLP(std::string file_path,std::string name,
@@ -45,6 +46,7 @@ DeviceMLP::DeviceMLP(std::string file_path,std::string name,
     d_layers.emplace_back(layers[i]);
   }
   this->input_size=d_layers[0].input_size;
+  cudaMalloc((void**)&batch_loss_buffer,batch_size*sizeof(float));
 }
 
 
@@ -104,6 +106,7 @@ void DeviceMLP::backwardBatchPass(const float* d_input,
 float DeviceMLP::runDeviceEpoch(){
   shuffleDataset();
   datasetToDevice();
+  cudaMalloc(&loss_array,(training_size/batch_size)*sizeof(float));
 
   for(int i=0;i<training_size;i+=batch_size){
     forwardBatchPass(d_training_set+i);
@@ -113,6 +116,7 @@ float DeviceMLP::runDeviceEpoch(){
   }
   thrust::device_vector<float> buf(loss_array,loss_array+training_size/batch_size);
   float sum=thrust::reduce(buf.begin(),buf.end(),0.0f,thrust::plus<float>());
+  cudaFree(loss_array);
   return (sum/training_size)*batch_size;
 }
 

@@ -24,7 +24,7 @@ class DeviceMLP:public MLP{
   // For cuda operations
   cublasHandle_t handle;
   // Buffers 
-  float* batch_loss_buffer;
+  float* batch_loss_buffer; // For each batch_size
   float* loss_array;
 
 
