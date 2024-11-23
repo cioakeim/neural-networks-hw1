@@ -81,8 +81,11 @@ float DeviceMLP::getBatchLoss(const int* correct_labels,
                                       batch_size,
                                       correct_labels,
                                       batch_loss_buffer);
+  std::cout<<"To thrust"<<std::endl;
   thrust::device_vector<float> buf(batch_loss_buffer,batch_loss_buffer+batch_size);
+  std::cout<<"To thrust"<<std::endl;
   float mean=thrust::reduce(buf.begin(),buf.end(),0.0f,thrust::plus<float>())/batch_size;
+  std::cout<<"To thrust"<<std::endl;
   cudaMemcpy(loss, &mean, sizeof(float), cudaMemcpyHostToDevice);
   return mean;
 }
@@ -109,7 +112,9 @@ float DeviceMLP::runDeviceEpoch(){
   cudaMalloc(&loss_array,(training_size/batch_size)*sizeof(float));
 
   for(int i=0;i<training_size;i+=batch_size){
+    std::cout<<"Forward"<<std::endl;
     forwardBatchPass(d_training_set+i);
+    std::cout<<"Batch loss"<<std::endl;
     getBatchLoss(d_training_labels+i*input_size,batch_size,
                  loss_array+i/batch_size);
     backwardBatchPass(d_training_set+i*input_size, d_training_labels+i);
