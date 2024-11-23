@@ -68,6 +68,7 @@ __global__ static void batchLossKernel(const float* d_activations,
   const int idx=blockIdx.x*blockDim.x+threadIdx.x;
   if(idx<batch_size){
     batch_loss_buffer[idx]=-log(epsilon+d_activations[output_size*idx+correct_labels[idx]]); 
+    std::cout<<"Written stuff"<<std::endl;
   }
 }
 
@@ -82,9 +83,9 @@ float DeviceMLP::getBatchLoss(const int* correct_labels,
                                       correct_labels,
                                       batch_loss_buffer);
   std::cout<<"To thrust"<<std::endl;
-  thrust::device_vector<float> buf(batch_loss_buffer,batch_loss_buffer+batch_size);
   std::cout<<"To thrust"<<std::endl;
-  float mean=thrust::reduce(buf.begin(),buf.end(),0.0f,thrust::plus<float>())/batch_size;
+  float mean=thrust::reduce(thrust::device_pointer_cast(batch_loss_buffer),
+                           thrust::device_pointer_cast(batch_loss_buffer+batch_size))/batch_size;
   std::cout<<"To thrust"<<std::endl;
   cudaMemcpy(loss, &mean, sizeof(float), cudaMemcpyHostToDevice);
   return mean;
