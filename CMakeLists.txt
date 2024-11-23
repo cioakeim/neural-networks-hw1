@@ -45,8 +45,6 @@ target_compile_options(testMLP PRIVATE -O3 -Wall -Wextra)
 if(CUDA_EXT)
 add_executable(testCudaMLP "${SCRIPTS}/testCudaMLP.cu")
 target_link_libraries(testCudaMLP PRIVATE cuda_mlp_lib)
-#set_target_properties(testCudaMLP
-#                    PROPERTIES CUDA_RUNTIME_LIBRARY Shared)
 target_link_libraries(testCudaMLP PRIVATE common_lib)
 target_compile_options(testCudaMLP PRIVATE -O3 -Wall -Wextra)
 endif()

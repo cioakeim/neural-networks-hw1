@@ -5,6 +5,10 @@
 #include <cmath>
 
 
+DeviceLayer::DeviceLayer():
+  input_size(0),
+  output_size(0),
+  batch_size(0){};
 
 DeviceLayer::DeviceLayer(int input_size,int output_size,int batch_size):
   input_size(input_size),

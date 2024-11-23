@@ -1,7 +1,6 @@
 #ifndef CUDA_MULTI_LAYER_PERCEPTRON_HPP
 #define CUDA_MULTI_LAYER_PERCEPTRON_HPP
 
-#include "MLP/MultiLayerPerceptron.hpp"
 #include "MLP/NewMLP.hpp"
 #include "CudaMLP/NeuronLayer.hpp"
 #include "vector"
@@ -29,6 +28,7 @@ class DeviceMLP:public MLP{
   float* loss_array;
 
 
+public:
   DeviceMLP(const std::vector<int>& layer_sizes,
       const int input_size,
       VectorFunction activation_function,

@@ -1,7 +1,6 @@
 #ifndef CUDA_NEURON_LAYER_HPP
 #define CUDA_NEURON_LAYER_HPP
 
-#include "MLP/NeuronLayer.hpp"
 #include "MLP/NewLayer.hpp"
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
@@ -19,6 +18,8 @@ struct DeviceLayer{
   float* d_biases;
   float* d_activations;
   float* d_errors;
+
+  DeviceLayer();
 
   DeviceLayer(int input_size,int output_size,int batch_size);
 
