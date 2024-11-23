@@ -5,8 +5,8 @@
 #include <Eigen/Dense>
 #include <vector>
 #include "MLP/NewLayer.hpp"
+#include "MLP/Modifiers.hpp"
 #include "CommonLib/basicStructs.hpp"
-#include <random>
 
 #define WEIGHT_DECAY 1e-7
 
@@ -16,32 +16,6 @@ using E::VectorXf;
 using E::VectorXi;
 using VectorFunction = std::function<MatrixXf(const MatrixXf)>;
 
-// For dropout creation
-struct Dropout{
-  const float rate;
-  std::mt19937 gen;
-  std::uniform_real_distribution<float> dist;
-  Eigen::MatrixXf mask;
-
-  Dropout():
-    rate(0){};
-
-  Dropout(MatrixXf input, const float rate):
-    rate(rate){
-    gen=std::mt19937(42);
-    dist=std::uniform_real_distribution<float>(0,1);
-    mask=MatrixXf(input.rows(),input.cols());
-  }
-
-  void maskInput(E::MatrixXf& input){
-    // Generate mask 
-    mask=(Eigen::MatrixXf::NullaryExpr(input.rows(),input.cols(), [&]() {
-        return dist(gen) > rate ? 1.0f : 0.0f;
-    }));
-    // Apply
-    input=input.array()*mask.array();
-  }
-};
 
 
 class MLP{
@@ -94,13 +68,11 @@ public:
   // For the whole dataset (assumed the array is shuffled)
   float runEpoch();
 
+  // Running without dropout
+  void forwardPassNoDropout(const MatrixXf& input);
+
   // Test the epoch result (return the loss function and accuracy)
   void testModel(float& J_test,float& accuracy);
-
-  // Softmax methods 
-  void softMaxForward(MatrixXf& activations);
-  // Returns Loss function of batch
-  void softMaxBackward(const VectorXi& correct_labels);
 
   // Store to place
   void store();

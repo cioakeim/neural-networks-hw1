@@ -39,8 +39,6 @@ void Layer::updateWeights(const MatrixXf& input,
   const float a=rate/batch_size;
   this->weights-=a*weightGradients+WEIGHT_DECAY*this->weights;
   this->biases-=a*biasGradients+WEIGHT_DECAY*this->biases;
-  std::cout<<"Positive weights percentage: "<<
-    (weights.array()>0).cast<float>().mean()<<std::endl;
 }
 
 
@@ -84,6 +82,47 @@ void Layer::HeRandomInit(){
     }
     biases(i)=abs(dist(gen));
   }
+}
+
+
+// Method with and without dropout
+void Layer::activate(const MatrixXf& input,VectorFunction activation_function,
+                     Dropout& drop){
+  this->activate(input,activation_function);
+  drop.maskInput(activations);
+}
+
+void Layer::activate(const MatrixXf& input,VectorFunction activation_function){
+  activations=activation_function((weights*input).colwise()+biases);
+}
+
+// Softmax output
+void Layer::softMaxForward(const MatrixXf& input,VectorFunction activation_function){
+  this->activate(input,activation_function);
+  const E::RowVectorXf maxCoeff=activations.colwise().maxCoeff();
+  // Subtract for numerical stability and exp
+  const MatrixXf exps=(activations.rowwise()-maxCoeff).array().exp();
+  // Get sum of each column 
+  const E::RowVectorXf col_sum=exps.colwise().sum();
+  activations=exps.array().rowwise()/col_sum.array();
+}
+
+void Layer::softMaxBackward(const VectorXi& correct_labels){
+  errors=activations;
+  const int sample_size=activations.cols();
+  #pragma omp parallel for
+  for(int i=0;i<sample_size;i++){
+    errors(correct_labels(i),i)--;
+  }
+}
+
+// Back propagation
+void Layer::activateErrors(const MatrixXf& next_weights,
+                           const MatrixXf& next_errors,
+                           VectorFunction activation_derivative){
+  errors=(next_weights.transpose()*next_errors).cwiseProduct(
+      activation_derivative(activations)
+    );
 }
 
 

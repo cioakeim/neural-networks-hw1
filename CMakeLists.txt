@@ -51,6 +51,11 @@ target_link_libraries(testCudaMLP PRIVATE common_lib)
 target_compile_options(testCudaMLP PRIVATE -O3 -Wall -Wextra)
 endif()
 
+add_executable(testStoredModel "${SCRIPTS}/testStoredModel.cpp")
+target_link_libraries(testStoredModel PRIVATE mlp_lib)
+target_link_libraries(testStoredModel PRIVATE common_lib)
+target_compile_options(testStoredModel PRIVATE -O3 -Wall -Wextra)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/build)
 
 

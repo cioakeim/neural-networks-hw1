@@ -4,6 +4,7 @@
 #include <iostream>
 #include <Eigen/Dense>
 #include <vector>
+#include "MLP/Modifiers.hpp"
 
 #define WEIGHT_DECAY 1e-7
 
@@ -33,9 +34,23 @@ struct Layer{
   void printActivations();
   void printErrors();
 
+  // Method with and without dropout
+  void activate(const MatrixXf& input,VectorFunction activation_function,
+                Dropout& drop);
+  void activate(const MatrixXf& input,VectorFunction activation_function);
+  // Softmax output
+  void softMaxForward(const MatrixXf& input,VectorFunction activation_function);
+  void softMaxBackward(const VectorXi& correct_labels);
+  // Back propagation
+  void activateErrors(const MatrixXf& next_weights,
+                      const MatrixXf& next_errors,
+                      VectorFunction activation_derivative);
+
+
   // Standard update
   void updateWeights(const MatrixXf& input,
-                     const float rate, const int batch_size);
+                     const float rate, 
+                     const int batch_size);
 
   // Store to location (2 files, 1 for weights and 1 for bias)
   void store(std::string folder_path);

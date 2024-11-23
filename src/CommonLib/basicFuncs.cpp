@@ -21,3 +21,18 @@ std::string create_network_folder(std::string folder_path){
   fs::create_directory(network_root);
   return network_root;
 }
+
+// Auxiliary
+int count_directories_in_path(const fs::path& path) {
+  int dir_count = 0;
+  // Check if the given path exists and is a directory
+  if (fs::exists(path) && fs::is_directory(path)) {
+    // Iterate through the directory entries
+    for (const auto& entry : fs::directory_iterator(path)) {
+      // Increment the count for each directory (since we know all entries are directories)
+      if(fs::is_directory(entry.path()))
+        dir_count++;
+    }
+  }
+  return dir_count;
+}

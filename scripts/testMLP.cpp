@@ -7,27 +7,25 @@
 
 #include "CommonLib/cifarHandlers.hpp"
 #include "CommonLib/basicFuncs.hpp"
-#include "MLP/MultiLayerPerceptron.hpp"
 #include "CommonLib/LogHandler.hpp"
 #include "MLP/ActivationFunctions.hpp"
 #include "MLP/NewMLP.hpp"
 #include <time.h>
 #include <csignal>
 
-#define LEARN_RATE 1e-3
+#define DEFAULT_LEARN_RATE 1e-3
 
-#define MAX_TRAINING 50e3
-#define MAX_TEST 10e3
+#define TRAINING_SIZE 50e3
+#define TEST_SIZE 10e3
 
-#define INPUT_WIDTH 32*32*3
-#define OUTPUT_WIDTH 10
+#define INPUT_SIZE 32*32*3
+#define OUTPUT_SIZE 10
 
-#define HIDDEN_WIDTH 32*32*2
-#define HIDDEN_DEPTH 4
 
-#define EPOCHS 15
-#define BATCH_SIZE 1000
+#define DEFAULT_EPOCHS 15
+#define DEFAULT_BATCH_SIZE 1000
 
+// If the job gets interrupted don't lose files
 std::ofstream file;
 void handle_signal(int signal) {
   std::cout<<"Terminating..."<<std::endl;
@@ -47,10 +45,12 @@ int main(int argc,char* argv[]){
   std::string dataset_path="../data/cifar-10-batches-bin";
   std::string nn_path="../data/networks";
   std::string log_filename="epoch_accuracy_log.csv";
-  float rate=LEARN_RATE;
-  int batch_size=BATCH_SIZE;
-  int epochs=EPOCHS;
+  float rate=DEFAULT_LEARN_RATE;
+  int batch_size=DEFAULT_BATCH_SIZE;
+  int epochs=DEFAULT_EPOCHS;
   std::vector<int> layer_sequence={2048,512,124,10};
+
+  // If parameters were passed
   if(argc>1){
     dataset_path=argv[1];
     nn_path=argv[2];
@@ -90,25 +90,21 @@ int main(int argc,char* argv[]){
   Cifar10Handler c10(dataset_path); 
 
   std::cout<<"Loading dataset..."<<std::endl;
-  std::vector<SamplePoint> training_set=c10.getTrainingList(MAX_TRAINING);
-  std::vector<SamplePoint> test_set=c10.getTestList(MAX_TEST);
-  std::cout<<"Loading successful..."<<std::endl;
+  std::vector<SamplePoint> training_set=c10.getTrainingList(TRAINING_SIZE);
+  std::vector<SamplePoint> test_set=c10.getTestList(TEST_SIZE);
 
 
   std::cout<<"Constructing MLP.."<<std::endl;
-  MLP mlp=MLP(layer_sequence,INPUT_WIDTH,
+  MLP mlp=MLP(layer_sequence,INPUT_SIZE,
               reLU,reLUder,rate,batch_size);
-
-  //MultiLayerPerceptron mlp=MultiLayerPerceptron(nn_path,"testNet");
   mlp.insertDataset(training_set,test_set);
   training_set.clear();
   test_set.clear();
-  std::cout<<"Clear"<<std::endl;
-
   // Initialization
   mlp.randomInit();
-  std::cout<<"Construction successful.."<<std::endl;
 
+
+  std::cout<<"Setting up test results paths.."<<std::endl;
   // Store current config's info
   std::string nn_root=create_network_folder(nn_path);
   mlp.setStorePath(nn_root);
@@ -125,6 +121,7 @@ int main(int argc,char* argv[]){
 
   file.open(nn_root+"/"+log_filename,std::ios::out);
   file<<"epoch,J_train,J_test,accuracy"<<std::endl;
+  // For handling ctrl-c and sigterm
   std::signal(SIGINT, handle_signal);
   std::signal(SIGTERM, handle_signal);
 
@@ -136,7 +133,7 @@ int main(int argc,char* argv[]){
   float best_J_test=INFINITY;
 
   log.start_timer();
-  for(int epoch=0;epoch<EPOCHS;epoch++){
+  for(int epoch=0;epoch<epochs;epoch++){
     std::cout<<"Epoch: "<<epoch<<std::endl;
     J_train=mlp.runEpoch();
     mlp.testModel(J_test,accuracy);

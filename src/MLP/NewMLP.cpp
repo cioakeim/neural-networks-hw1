@@ -1,4 +1,5 @@
 #include "MLP/NewMLP.hpp"
+#include "CommonLib/basicFuncs.hpp"
 #include <fstream> 
 #include <filesystem>
 #include <string>
@@ -30,21 +31,6 @@ MLP::MLP(const std::vector<int>& layer_sizes,
    
 }
 
-// Auxiliary
-int count_directories_in_path(const fs::path& path) {
-    int dir_count = 0;
-
-    // Check if the given path exists and is a directory
-    if (fs::exists(path) && fs::is_directory(path)) {
-        // Iterate through the directory entries
-        for (const auto& entry : fs::directory_iterator(path)) {
-            // Increment the count for each directory (since we know all entries are directories)
-            ++dir_count;
-        }
-    }
-    return dir_count;
-}
-
 
 // Load from file
 MLP::MLP(std::string file_path,std::string name,
@@ -58,29 +44,23 @@ MLP::MLP(std::string file_path,std::string name,
   fs::path path(file_path+"/"+name);
   int layer_count=count_directories_in_path(path);
   for(int i=0;i<layer_count;i++){
-    layers.emplace_back(file_path+"/"+name+"/layer"+std::to_string(i),
+    layers.emplace_back(file_path+"/"+name+"/layer_"+std::to_string(i),
                         batch_size);
   }
+  this->depth=layer_count;
 }
 
 
 // Do forward and backward pass in batches
 void MLP::forwardBatchPass(const MatrixXf& input){
   // Initial layer
-  layers[0].activations=activation_function((layers[0].weights*input).colwise()
-                                            +layers[0].biases);
-  drop[0].maskInput(layers[0].activations);
+  layers[0].activate(input,activation_function,drop[0]);
 
   for(int i=1;i<depth-1;i++){
-    layers[i].activations=activation_function((layers[i].weights*
-                                              layers[i-1].activations).colwise()+
-                                              layers[i].biases);
-    drop[i].maskInput(layers[i].activations);
+    layers[i].activate(layers[i-1].activations,activation_function,drop[i]);
   }
   // Softmax output 
-  layers[depth-1].activations=(layers[depth-1].weights*layers[depth-2].activations).colwise()+
-                               layers[depth-1].biases;
-  softMaxForward(layers[depth-1].activations);
+  layers[depth-1].softMaxForward(layers[depth-2].activations,activation_function);
 }
 
 float MLP::getBatchLosss(const VectorXi& correct_labels){
@@ -91,22 +71,22 @@ float MLP::getBatchLosss(const VectorXi& correct_labels){
   for(int i=0;i<sample_count;i++){
     sum-=log(layers[depth-1].activations(correct_labels[i],i)+epsilon); 
   }
-  return sum/batch_size;
+  return sum/sample_count;
 }
 
 void MLP::backwardBatchPass(const MatrixXf& input,
                        const VectorXi& correct_labels){
   // Initial errors
-  softMaxBackward(correct_labels);
-
+  layers[depth-1].softMaxBackward(correct_labels);
   // Backward propagate 
   for(int i=depth-2;i>=0;i--){
-    layers[i].errors=(layers[i+1].weights.transpose()*layers[i+1].errors).cwiseProduct(
-                      activation_derivative(layers[i].activations)
-    );
+    layers[i].activateErrors(layers[i+1].weights, 
+                             layers[i+1].errors, 
+                             activation_derivative);
   }  
   // Reduce errors and update
   layers[0].updateWeights(input,learning_rate,batch_size);
+  #pragma omp parallel for
   for(int i=1;i<depth;i++){
     layers[i].updateWeights(layers[i-1].activations,learning_rate,batch_size);
   }
@@ -145,20 +125,35 @@ float MLP::runEpoch(){
   return batch_losses.mean();
 }
 
+
+void MLP::forwardPassNoDropout(const MatrixXf& input){
+  // Initial layer
+  layers[0].activate(input,activation_function);
+
+  for(int i=1;i<depth-1;i++){
+    layers[i].activate(layers[i-1].activations,activation_function);
+  }
+  // Softmax output 
+  layers[depth-1].softMaxForward(layers[depth-2].activations,activation_function);
+}
+
 void MLP::testModel(float& J_test,float& accuracy){
-  std::cout<<"Testing..."<<std::endl;
   const int batch_size=(1000<test_labels.size())?(1000):(test_labels.size());
   const int test_size=test_set.cols();
-  std::cout<<"Batch_size: "<<batch_size<<std::endl;
-  std::cout<<"Test size: "<<test_size<<std::endl;
 
+  // Counters of both J_test and accuracy
   int success_count=0; 
   VectorXf batch_losses=VectorXf(test_size/batch_size);
+  // Test in batches
   for(int idx=0;idx<test_size;idx+=batch_size){
+    // Get columns needed
     const MatrixXf& input=test_set.middleCols(idx,batch_size);
     const VectorXi& labels=test_labels.segment(idx,batch_size);
-    forwardBatchPass(input);
+    // Feed forward with no dropout
+    forwardPassNoDropout(input);
+    // Record batch loss
     batch_losses[idx/batch_size]=getBatchLosss(labels);
+
     // Count successful predictions
     for(int i=0;i<batch_size;i++){
       E::Index c_idx;
@@ -192,26 +187,6 @@ void MLP::store(){
   }
 }
 
-
-// Softmax methods
-void MLP::softMaxForward(MatrixXf& activations){
-  // Get max of each column
-  const E::RowVectorXf maxCoeff=activations.colwise().maxCoeff();
-  // Subtract for numerical stability and exp
-  const MatrixXf exps=(activations.rowwise()-maxCoeff).array().exp();
-  // Get sum of each column 
-  const E::RowVectorXf col_sum=exps.colwise().sum();
-  activations=exps.array().rowwise()/col_sum.array();
-}
-
-
-void MLP::softMaxBackward(const VectorXi& correct_labels){
-  layers[depth-1].errors=layers[depth-1].activations;
-  const int sample_size=layers[depth-1].activations.cols();
-  for(int i=0;i<sample_size;i++){
-    layers[depth-1].errors(correct_labels(i),i)--;
-  }
-}
 
 
 // Config:
