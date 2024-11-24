@@ -37,9 +37,7 @@ void Layer::updateWeights(const MatrixXf& input,
   E::MatrixXf weightGradients=this->errors*(input.transpose());
   E::VectorXf biasGradients=this->errors.rowwise().sum();
   if(adam.epsilon>0){
-    std::cout<<"Weight range: "<<weights.maxCoeff()<<" "<<weights.minCoeff()<<std::endl;
     adam.update(weightGradients, biasGradients, weights, biases);
-    std::cout<<"Weight range: "<<weights.maxCoeff()<<" "<<weights.minCoeff()<<std::endl;
     return;
   }
   const float a=rate/batch_size;

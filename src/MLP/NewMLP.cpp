@@ -122,7 +122,6 @@ float MLP::runEpoch(){
   VectorXf batch_losses=VectorXf(training_size/batch_size);
 
   for(int idx=0;idx<training_size;idx+=batch_size){
-    std::cout<<"IDX: "<<idx<<std::endl;
     const MatrixXf& input=training_set.middleCols(idx,batch_size);
     const VectorXi& labels=training_labels.segment(idx,batch_size);
     forwardBatchPass(input);
