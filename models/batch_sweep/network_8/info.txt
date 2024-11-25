@@ -1,0 +1,5 @@
+Rate: 0.001
+Batch size: 50
+Epochs: 20
+Layers: 2048,512,124,10,
+Execution time: 15222.7
